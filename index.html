@@ -2,11 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Readthechart & Ccolor – Vision Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Free online vision screening tests including reading speed (MNREAD), contrast sensitivity (Pelli-Robson), and color vision (Ishihara). Professional-grade eye tests based on clinical standards.">
+    <meta name="keywords" content="vision test, eye test, reading speed, contrast sensitivity, color vision, Ishihara test, MNREAD, free eye exam, vision screening">
+    <meta name="author" content="Vision Screening Pro">
+    
+    <!-- Open Graph for social media sharing -->
+    <meta property="og:title" content="Vision Screening Pro - Free Online Vision Tests">
+    <meta property="og:description" content="Professional-grade vision screening: reading speed, contrast sensitivity, color vision tests based on clinical standards">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ajincanada.github.io/vision-screening-pro/">
+    
+    <!-- Mobile app capabilities -->
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vision Test">
+    
+    <title>Vision Screening Pro - Free Online Eye Tests</title>
+    
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Browser compatibility warning -->
+    <div id="browser-warning" class="warning-banner" style="display: none;">
+        ⚠️ <strong>Browser Notice:</strong> For best results, use Chrome, Safari, or Edge. Microphone features may be limited in Firefox.
+    </div>
+    
+    <!-- Landscape orientation warning for mobile -->
+    <div id="landscape-warning" class="landscape-warning" style="display: none;">
+        <div class="landscape-content">
+            <h2>📱 Rotate Your Device</h2>
+            <div class="rotate-icon">⟲</div>
+            <p><strong>Please rotate to LANDSCAPE MODE</strong></p>
+            <p style="margin-top: 20px; opacity: 0.8;">This ensures accurate test sizing</p>
+        </div>
+    </div>
     <div class="container">
         <!-- Header Section -->
         <header>
@@ -16,58 +48,114 @@
             </div>
         </header>
 
+        <!-- Device Setup Section -->
+        <section id="device-setup" class="section active">
+            <div class="content">
+                <h2>Device Setup</h2>
+                <p style="background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <strong>⚠️ IMPORTANT: Hold your device HORIZONTALLY (landscape mode)</strong>
+                </p>
+                
+                <h3>Select Your Device Screen Size:</h3>
+                
+                <div class="device-selection">
+                    <button class="device-btn" data-diagonal="6.1" data-type="phone">
+                        <div class="device-icon">📱</div>
+                        <div class="device-name">iPhone 13/14/15</div>
+                        <div class="device-size">6.1 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="6.7" data-type="phone">
+                        <div class="device-icon">📱</div>
+                        <div class="device-name">iPhone Pro Max</div>
+                        <div class="device-size">6.7 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="10.9" data-type="tablet">
+                        <div class="device-icon">📱</div>
+                        <div class="device-name">iPad 10th Gen</div>
+                        <div class="device-size">10.9 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="11.0" data-type="tablet">
+                        <div class="device-icon">📱</div>
+                        <div class="device-name">iPad Pro 11"</div>
+                        <div class="device-size">11 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="12.9" data-type="tablet">
+                        <div class="device-icon">📱</div>
+                        <div class="device-name">iPad Pro 12.9"</div>
+                        <div class="device-size">12.9 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="13.3" data-type="laptop">
+                        <div class="device-icon">💻</div>
+                        <div class="device-name">MacBook Air / 13" Laptop</div>
+                        <div class="device-size">13.3 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="15.6" data-type="laptop">
+                        <div class="device-icon">💻</div>
+                        <div class="device-name">15" Laptop</div>
+                        <div class="device-size">15.6 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="24" data-type="monitor">
+                        <div class="device-icon">🖥️</div>
+                        <div class="device-name">24" Monitor</div>
+                        <div class="device-size">24 inches</div>
+                    </button>
+                    
+                    <button class="device-btn" data-diagonal="27" data-type="monitor">
+                        <div class="device-icon">🖥️</div>
+                        <div class="device-name">27" Monitor</div>
+                        <div class="device-size">27 inches</div>
+                    </button>
+                </div>
+                
+                <div class="nav-buttons" style="text-align: center; margin-top: 30px;">
+                    <button id="device-next-btn" class="btn btn-primary" disabled style="min-height: 60px; font-size: 1.1rem; padding: 1rem 2rem;">Next - Continue to Tests</button>
+                </div>
+            </div>
+        </section>
+
         <!-- Navigation Bar -->
         <nav class="nav-bar">
-            <button class="nav-btn active" data-section="readthechart">Readthechart</button>
+            <button class="nav-btn" data-section="device-setup">Device Setup</button>
+            <button class="nav-btn" data-section="readthechart">Readthechart</button>
             <button class="nav-btn" data-section="contrast">Contrast</button>
             <button class="nav-btn" data-section="ccolor">Ccolor</button>
             <button class="nav-btn" data-section="depth">Depth</button>
         </nav>
 
         <!-- Readthechart Section -->
-        <section id="readthechart" class="section active">
-            <h2>Readthechart</h2>
-            <p class="section-note">Readthechart is an educational reading demo inspired by continuous-text reading charts. This is not an official MNREAD® test and is not for diagnosis.</p>
+        <section id="readthechart" class="section">
+            <h2>Near Vision - MNREAD-Style Reading</h2>
+            <p class="section-note">Reading speed test with full chart display (8M to 0.4M). Measures Critical Print Size (CPS) and Threshold Print Size (TPS). This is an educational screening test based on MNREAD methodology, not an official MNREAD® test and is not for diagnosis.</p>
             
-            <div class="reading-demo">
-                <div id="reading-wrapper" class="reading-wrapper">
-                    <div id="sentence-display" class="sentence-display"></div>
-                    <div id="m-label" class="m-label"></div>
-                </div>
-                <div class="controls">
-                    <button id="start-btn" class="action-btn">Start</button>
-                    <button id="done-btn" class="action-btn" disabled>Done</button>
-                    <button id="next-btn" class="action-btn" style="display: none;">Next Sentence</button>
-                </div>
-                <div id="timer-display" class="timer-display"></div>
-                <div id="progress-info" class="progress-info"></div>
-                <p class="m-note">M-values are approximate and depend on your screen size and viewing distance.</p>
+            <div id="reading-container" class="reading-container">
+                <!-- Reading chart will be dynamically generated here -->
             </div>
         </section>
 
         <!-- Contrast Section -->
         <section id="contrast" class="section">
-            <h2>Contrast Sensitivity Demo</h2>
-            <p class="section-note">Each line below has different contrast between text and background. This demo uses approximate Michelson contrast values. Results are approximate and depend on your screen settings.</p>
+            <h2>Contrast Sensitivity - Clinical Levels</h2>
+            <p class="section-note">5-letter lines at decreasing contrast levels (100% to 1.25%). Need 4 out of 5 letters correct to pass each line. This is an educational screening test based on Pelli-Robson methodology, not a diagnostic tool.</p>
             
-            <ul id="contrast-list" class="contrast-list"></ul>
-            
-            <p class="explanation">This is an educational contrast sensitivity demo. Professional contrast sensitivity tests require calibrated luminance and controlled viewing conditions. For people with low vision, high contrast materials are essential. When designing accessible content, aim for a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.</p>
+            <div id="contrast-container" class="contrast-container">
+                <!-- Contrast chart will be dynamically generated here -->
+            </div>
         </section>
 
         <!-- Ccolor Section -->
         <section id="ccolor" class="section">
-            <h2>Ccolor</h2>
-            <p class="section-note">This is an educational Ccolor demo, not a clinical color-vision test. Monitor color and brightness vary, so results are approximate.</p>
+            <h2>Color Vision - Pseudo-Isochromatic Plates</h2>
+            <p class="section-note">Red-green deficiency screening using Ishihara-style pseudo-isochromatic plates. This is an educational screening test based on Ishihara methodology, not a clinical diagnostic tool. Monitor color calibration and ambient lighting (6500K, CRI >90 recommended) affect results.</p>
             
             <div class="color-demo">
-                <canvas id="color-canvas" width="400" height="400"></canvas>
-                <div class="color-controls">
-                    <label for="color-answer">What number do you see?</label>
-                    <input type="text" id="color-answer" placeholder="Enter number">
-                    <button id="check-color-btn" class="action-btn">Check</button>
-                    <div id="color-feedback" class="feedback"></div>
-                </div>
+                <!-- Color plates will be dynamically generated here -->
             </div>
         </section>
 
@@ -84,6 +172,44 @@
         </section>
     </div>
 
+    <script src="app.js"></script>
     <script src="script.js"></script>
+    
+    <!-- Browser detection and orientation check -->
+    <script>
+        // Detect browser compatibility
+        window.addEventListener('load', function() {
+            // Check browser
+            const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+            const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+            
+            if (isFirefox && !hasSpeechRecognition) {
+                const warning = document.getElementById('browser-warning');
+                if (warning) warning.style.display = 'block';
+            }
+            
+            // Initial orientation check
+            checkOrientation();
+        });
+        
+        // Check and enforce landscape orientation on mobile
+        function checkOrientation() {
+            const isMobile = window.innerWidth < 768;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const warning = document.getElementById('landscape-warning');
+            
+            if (warning && isMobile && isPortrait) {
+                warning.style.display = 'flex';
+            } else if (warning) {
+                warning.style.display = 'none';
+            }
+        }
+        
+        // Monitor orientation changes
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(checkOrientation, 100);
+        });
+    </script>
 </body>
 </html>
