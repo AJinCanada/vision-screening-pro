@@ -10,9 +10,9 @@
     <div class="container">
         <!-- Header Section -->
         <header>
-            <h1>Readthechart & Ccolor – Vision Demo (Not for Diagnosis)</h1>
+            <h1>Readthechart & Ccolor – Vision Demo</h1>
             <div class="disclaimer">
-                <p><strong>Educational Use Only:</strong> This website is for educational and demonstration purposes only. It is not a medical diagnostic tool and should not be used to diagnose, treat, or assess any vision conditions. Always consult with a qualified eye care professional for proper vision testing and diagnosis.</p>
+                <p>This is an educational vision screening demo. Results can be affected by screen size, brightness, viewing distance, and lighting and are not a substitute for a full eye examination.</p>
             </div>
         </header>
 
@@ -21,7 +21,6 @@
             <button class="nav-btn active" data-section="readthechart">Readthechart</button>
             <button class="nav-btn" data-section="contrast">Contrast</button>
             <button class="nav-btn" data-section="ccolor">Ccolor</button>
-            <button class="nav-btn" data-section="astigmatism">Astigmatism</button>
             <button class="nav-btn" data-section="depth">Depth</button>
         </nav>
 
@@ -31,7 +30,10 @@
             <p class="section-note">Readthechart is an educational reading demo inspired by continuous-text reading charts. This is not an official MNREAD® test and is not for diagnosis.</p>
             
             <div class="reading-demo">
-                <div id="sentence-display" class="sentence-display"></div>
+                <div id="reading-wrapper" class="reading-wrapper">
+                    <div id="sentence-display" class="sentence-display"></div>
+                    <div id="m-label" class="m-label"></div>
+                </div>
                 <div class="controls">
                     <button id="start-btn" class="action-btn">Start</button>
                     <button id="done-btn" class="action-btn" disabled>Done</button>
@@ -39,36 +41,24 @@
                 </div>
                 <div id="timer-display" class="timer-display"></div>
                 <div id="progress-info" class="progress-info"></div>
+                <p class="m-note">M-values are approximate and depend on your screen size and viewing distance.</p>
             </div>
         </section>
 
         <!-- Contrast Section -->
         <section id="contrast" class="section">
-            <h2>Contrast</h2>
-            <p class="section-note">Contrast is the difference between text and its background. Higher contrast makes text easier to read, especially for people with low vision.</p>
+            <h2>Contrast Sensitivity Demo</h2>
+            <p class="section-note">Each line below has different contrast between text and background. This demo uses approximate Michelson contrast values. Results are approximate and depend on your screen settings.</p>
             
-            <div class="contrast-demo">
-                <div class="contrast-box high-contrast">
-                    <h3>High Contrast</h3>
-                    <p>This text has high contrast. The black text stands out clearly against the white background, making it easy to read.</p>
-                </div>
-                <div class="contrast-box medium-contrast">
-                    <h3>Medium Contrast</h3>
-                    <p>This text has medium contrast. The gray text is less distinct from the background, requiring more effort to read.</p>
-                </div>
-                <div class="contrast-box low-contrast">
-                    <h3>Low Contrast</h3>
-                    <p>This text has low contrast. The light gray text blends with the background, making it difficult to read for many people.</p>
-                </div>
-            </div>
+            <ul id="contrast-list" class="contrast-list"></ul>
             
-            <p class="explanation">For people with low vision, high contrast materials are essential. When designing accessible content, aim for a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.</p>
+            <p class="explanation">This is an educational contrast sensitivity demo. Professional contrast sensitivity tests require calibrated luminance and controlled viewing conditions. For people with low vision, high contrast materials are essential. When designing accessible content, aim for a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.</p>
         </section>
 
         <!-- Ccolor Section -->
         <section id="ccolor" class="section">
             <h2>Ccolor</h2>
-            <p class="section-note">Ccolor is a custom color-vision demo inspired by color-dot tests like pseudo-isochromatic plates. This is not an official Ishihara® test and is not for diagnosis.</p>
+            <p class="section-note">This is an educational Ccolor demo, not a clinical color-vision test. Monitor color and brightness vary, so results are approximate.</p>
             
             <div class="color-demo">
                 <canvas id="color-canvas" width="400" height="400"></canvas>
@@ -81,41 +71,15 @@
             </div>
         </section>
 
-        <!-- Astigmatism Section -->
-        <section id="astigmatism" class="section">
-            <h2>Astigmatism</h2>
-            <p class="section-note">This demo shows radial lines that can help identify astigmatism. This is not a substitute for professional eye examination.</p>
-            
-            <div class="astigmatism-demo">
-                <canvas id="astigmatism-canvas" width="400" height="400"></canvas>
-                <p class="instruction">Look at the center of the pattern. Do some lines appear darker, blurrier, or more distinct than others? If you notice differences, it may indicate astigmatism. Please see an eye care professional for proper testing and diagnosis.</p>
-            </div>
-        </section>
-
         <!-- Depth Section -->
         <section id="depth" class="section">
-            <h2>Depth Perception</h2>
-            <p class="section-note">Depth perception allows us to judge distances and see the world in three dimensions.</p>
+            <h2>Depth Demo (Titmus-style concept)</h2>
+            <p class="section-note">In the Titmus stereo test, special glasses show slightly different images to each eye so some circles appear closer. A standard screen cannot reproduce that stereo effect, but the pattern below illustrates the idea.</p>
             
             <div class="depth-demo">
-                <p class="explanation">Professional depth perception tests use specialized printed materials, polarized glasses, or stereoscopic devices to accurately measure depth perception. These tests require controlled lighting and viewing conditions.</p>
-                
-                <p class="explanation">Depth perception relies on several visual cues including:</p>
-                <ul>
-                    <li><strong>Binocular vision:</strong> Using both eyes together to create depth</li>
-                    <li><strong>Stereopsis:</strong> The brain's ability to combine images from both eyes</li>
-                    <li><strong>Monocular cues:</strong> Shadows, overlapping objects, and perspective</li>
-                </ul>
-                
-                <div class="depth-visual">
-                    <h3>Visual Depth Cues Demo</h3>
-                    <div class="overlapping-shapes">
-                        <div class="shape shape-1">Circle 1</div>
-                        <div class="shape shape-2">Circle 2</div>
-                        <div class="shape shape-3">Circle 3</div>
-                    </div>
-                    <p class="caption">Notice how overlapping shapes and shadows create a sense of depth. The circle with the shadow appears closer.</p>
-                </div>
+                <canvas id="depth-canvas" width="300" height="200"></canvas>
+                <p id="depth-info" class="depth-info">Closest group number: 3 (conceptual only).</p>
+                <p class="explanation">This demo illustrates the concept of the Titmus test but cannot measure stereo threshold in arc-seconds as the real Titmus test does. Professional depth perception tests require specialized printed materials with polarized glasses and controlled viewing conditions.</p>
             </div>
         </section>
     </div>

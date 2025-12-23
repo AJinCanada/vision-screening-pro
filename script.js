@@ -1,3 +1,12 @@
+// M-values for reading chart (nominal values, approximate)
+// These assume specific screen DPI and viewing distance
+const mValues = [
+    "1.0M", "1.1M", "1.2M", "1.3M", "1.4M", "1.5M", "1.6M", "1.7M", "1.8M", "1.9M",
+    "2.0M", "2.1M", "2.2M", "2.3M", "2.4M", "2.5M", "2.6M", "2.7M", "2.8M", "2.9M",
+    "3.0M", "3.2M", "3.4M", "3.6M", "3.8M", "4.0M", "4.2M", "4.4M", "4.6M", "4.8M",
+    "5.0M", "5.5M", "6.0M", "6.5M", "7.0M"
+];
+
 // Original sentences for Readthechart demo
 // Grade 2-3 level, 50-70 characters each
 const sentences = [
@@ -64,8 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Ccolor
     initCcolor();
     
-    // Initialize Astigmatism
-    initAstigmatism();
+    // Initialize Contrast
+    initContrast();
+    
+    // Initialize Depth
+    initDepth();
 });
 
 // Readthechart functionality
@@ -125,6 +137,7 @@ function initReadthechart() {
 function displaySentence() {
     const sentenceDisplay = document.getElementById('sentence-display');
     const progressInfo = document.getElementById('progress-info');
+    const mLabel = document.getElementById('m-label');
     const sentence = sentences[currentSentenceIndex];
     
     // Calculate font size - decreases with each sentence
@@ -134,6 +147,11 @@ function displaySentence() {
     const fontSize = Math.max(12, baseSize - (currentSentenceIndex * decreaseRate));
     
     sentenceDisplay.innerHTML = `<p style="font-size: ${fontSize}px;">${sentence}</p>`;
+    
+    // Display M-value label
+    const mValue = mValues[currentSentenceIndex] || "";
+    mLabel.textContent = mValue;
+    
     progressInfo.textContent = `Sentence ${currentSentenceIndex + 1} of ${sentences.length}`;
 }
 
@@ -255,43 +273,117 @@ function drawNumber(ctx, numberStr, startX, startY, digitWidth, digitHeight, dot
     }
 }
 
-// Astigmatism functionality - draw radial lines
-function initAstigmatism() {
-    const canvas = document.getElementById('astigmatism-canvas');
-    const ctx = canvas.getContext('2d');
-    
-    drawAstigmatismPattern(ctx, canvas.width, canvas.height);
+// Contrast Sensitivity functionality
+function initContrast() {
+    setupContrastTest();
 }
 
-function drawAstigmatismPattern(ctx, width, height) {
-    // Clear canvas with white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, width, height);
+// Calculate relative luminance from RGB (WCAG formula)
+function getRelativeLuminance(r, g, b) {
+    const rsRGB = r / 255;
+    const gsRGB = g / 255;
+    const bsRGB = b / 255;
     
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 2 - 20;
-    const numLines = 24; // 24 radial lines like a clock
+    const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+    const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+    const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
     
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 2;
-    
-    // Draw radial lines from center
-    for (let i = 0; i < numLines; i++) {
-        const angle = (i * 2 * Math.PI) / numLines;
-        const endX = centerX + Math.cos(angle) * radius;
-        const endY = centerY + Math.sin(angle) * radius;
-        
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(endX, endY);
-        ctx.stroke();
-    }
-    
-    // Draw a small circle in the center
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
-    ctx.fill();
+    return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
 }
+
+// Calculate approximate Michelson contrast
+function calculateMichelsonContrast(textR, textG, textB, bgR, bgG, bgB) {
+    const textLum = getRelativeLuminance(textR, textG, textB);
+    const bgLum = getRelativeLuminance(bgR, bgG, bgB);
+    
+    const maxLum = Math.max(textLum, bgLum);
+    const minLum = Math.min(textLum, bgLum);
+    
+    if (maxLum + minLum === 0) return 0;
+    return (maxLum - minLum) / (maxLum + minLum);
+}
+
+function setupContrastTest() {
+    const list = document.getElementById('contrast-list');
+    list.innerHTML = "";
+
+    // Contrast levels (approximate Michelson contrast values)
+    const contrastLevels = [0.8, 0.5, 0.3, 0.2, 0.1, 0.05];
+
+    contrastLevels.forEach(c => {
+        const li = document.createElement('li');
+        li.className = 'contrast-item';
+
+        // Background is white (255, 255, 255)
+        const bgR = 255;
+        const bgG = 255;
+        const bgB = 255;
+
+        // Calculate text color to achieve desired contrast
+        // Higher "c" -> darker text (lower RGB values)
+        const textGray = Math.round(255 * (1 - c * 1.2)); // Adjust multiplier for better visibility
+        const textR = Math.max(0, textGray);
+        const textG = Math.max(0, textGray);
+        const textB = Math.max(0, textGray);
+
+        // Calculate actual Michelson contrast
+        const actualContrast = calculateMichelsonContrast(textR, textG, textB, bgR, bgG, bgB);
+        const percent = Math.round(actualContrast * 100);
+
+        li.style.backgroundColor = `rgb(${bgR},${bgG},${bgB})`;
+        li.style.color = `rgb(${textR},${textG},${textB})`;
+
+        li.textContent = `Contrast ${percent}% – Example text for contrast sensitivity demonstration.`;
+        list.appendChild(li);
+    });
+}
+
+// Depth Perception - Titmus-style concept
+function initDepth() {
+    setupDepthDemo();
+}
+
+function setupDepthDemo() {
+    const canvas = document.getElementById('depth-canvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+
+    // Clear canvas
+    ctx.fillStyle = '#f9f9f9';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const groups = [
+        { x: 60, y: 100, label: 1 },
+        { x: 150, y: 90, label: 2 },
+        { x: 240, y: 80, label: 3 } // slightly higher / with shadow to appear "closer"
+    ];
+
+    groups.forEach((g, idx) => {
+        ctx.save();
+        ctx.translate(g.x, g.y);
+        
+        // Give group 3 a shadow to look "closer" (monocular depth cue)
+        if (g.label === 3) {
+            ctx.shadowColor = "rgba(0,0,0,0.3)";
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 4;
+        }
+        
+        // Draw 4 circles in each group
+        for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.arc((i - 1.5) * 15, 0, 6, 0, Math.PI * 2);
+            ctx.fillStyle = "#4a6fa5";
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // Draw label
+        ctx.fillStyle = "#000";
+        ctx.font = "12px Arial";
+        ctx.fillText(g.label.toString(), g.x - 3, g.y + 30);
+    });
+}
+
 

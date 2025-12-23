@@ -109,21 +109,42 @@ header h1 {
     padding: 30px 0;
 }
 
-.sentence-display {
+.reading-wrapper {
+    position: relative;
     min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     margin: 30px 0;
     padding: 20px;
     background-color: #f9f9f9;
     border-radius: 5px;
 }
 
+.sentence-display {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .sentence-display p {
     margin: 0;
     font-family: 'Times New Roman', serif;
     transition: font-size 0.3s;
+}
+
+.m-label {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: bold;
+}
+
+.m-note {
+    margin-top: 15px;
+    font-size: 0.85em;
+    color: #7f8c8d;
+    font-style: italic;
 }
 
 .controls {
@@ -167,36 +188,22 @@ header h1 {
 }
 
 /* Contrast Section */
-.contrast-demo {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.contrast-list {
+    list-style: none;
+    padding: 0;
     margin: 30px 0;
 }
 
-.contrast-box {
-    padding: 20px;
-    border-radius: 5px;
-    border: 2px solid #ddd;
-}
-
-.high-contrast {
-    background-color: white;
-    color: black;
-}
-
-.medium-contrast {
-    background-color: #f0f0f0;
-    color: #666;
-}
-
-.low-contrast {
-    background-color: #f5f5f5;
-    color: #bbb;
-}
-
-.contrast-box h3 {
-    margin-bottom: 10px;
+.contrast-item {
+    padding: 12px 16px;
+    margin: 8px 0;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-align: left;
+    font-size: 1em;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
 }
 
 .explanation {
@@ -255,105 +262,33 @@ header h1 {
     color: #e74c3c;
 }
 
-/* Astigmatism Section */
-.astigmatism-demo {
+/* Depth Section */
+.depth-demo {
     text-align: center;
     padding: 20px 0;
 }
 
-#astigmatism-canvas {
+#depth-canvas {
     border: 2px solid #ddd;
     border-radius: 5px;
     margin: 20px 0;
-    background-color: white;
+    background-color: #f9f9f9;
 }
 
-.instruction {
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 15px;
-    background-color: #fff3cd;
-    border-left: 4px solid #ffc107;
-    text-align: left;
-    line-height: 1.8;
-}
-
-/* Depth Section */
-.depth-demo {
-    padding: 20px 0;
+.depth-info {
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: #2c3e50;
+    font-weight: bold;
 }
 
 .depth-demo .explanation {
-    margin-bottom: 15px;
-}
-
-.depth-demo ul {
-    margin: 15px 0 15px 30px;
-    line-height: 2;
-}
-
-.depth-demo li {
-    margin-bottom: 10px;
-}
-
-.depth-visual {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #f9f9f9;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e8f4f8;
     border-radius: 5px;
-}
-
-.depth-visual h3 {
-    margin-bottom: 20px;
-    color: #2c3e50;
-}
-
-.overlapping-shapes {
-    position: relative;
-    height: 300px;
-    margin: 20px 0;
-}
-
-.shape {
-    position: absolute;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.shape-1 {
-    background-color: #3498db;
-    left: 50px;
-    top: 50px;
-    z-index: 3;
-}
-
-.shape-2 {
-    background-color: #e74c3c;
-    left: 150px;
-    top: 80px;
-    z-index: 2;
-}
-
-.shape-3 {
-    background-color: #27ae60;
-    left: 100px;
-    top: 140px;
-    z-index: 1;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-.caption {
-    margin-top: 15px;
-    font-style: italic;
-    color: #7f8c8d;
-    text-align: center;
+    line-height: 1.8;
+    text-align: left;
 }
 
 /* Responsive Design */
@@ -375,7 +310,7 @@ header h1 {
     }
     
     #color-canvas,
-    #astigmatism-canvas {
+    #depth-canvas {
         width: 100%;
         max-width: 400px;
         height: auto;
