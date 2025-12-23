@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Readthechart & Ccolor – Vision Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <h1>Readthechart & Ccolor – Vision Demo (Not for Diagnosis)</h1>
+            <div class="disclaimer">
+                <p><strong>Educational Use Only:</strong> This website is for educational and demonstration purposes only. It is not a medical diagnostic tool and should not be used to diagnose, treat, or assess any vision conditions. Always consult with a qualified eye care professional for proper vision testing and diagnosis.</p>
+            </div>
+        </header>
+
+        <!-- Navigation Bar -->
+        <nav class="nav-bar">
+            <button class="nav-btn active" data-section="readthechart">Readthechart</button>
+            <button class="nav-btn" data-section="contrast">Contrast</button>
+            <button class="nav-btn" data-section="ccolor">Ccolor</button>
+            <button class="nav-btn" data-section="astigmatism">Astigmatism</button>
+            <button class="nav-btn" data-section="depth">Depth</button>
+        </nav>
+
+        <!-- Readthechart Section -->
+        <section id="readthechart" class="section active">
+            <h2>Readthechart</h2>
+            <p class="section-note">Readthechart is an educational reading demo inspired by continuous-text reading charts. This is not an official MNREAD® test and is not for diagnosis.</p>
+            
+            <div class="reading-demo">
+                <div id="sentence-display" class="sentence-display"></div>
+                <div class="controls">
+                    <button id="start-btn" class="action-btn">Start</button>
+                    <button id="done-btn" class="action-btn" disabled>Done</button>
+                    <button id="next-btn" class="action-btn" style="display: none;">Next Sentence</button>
+                </div>
+                <div id="timer-display" class="timer-display"></div>
+                <div id="progress-info" class="progress-info"></div>
+            </div>
+        </section>
+
+        <!-- Contrast Section -->
+        <section id="contrast" class="section">
+            <h2>Contrast</h2>
+            <p class="section-note">Contrast is the difference between text and its background. Higher contrast makes text easier to read, especially for people with low vision.</p>
+            
+            <div class="contrast-demo">
+                <div class="contrast-box high-contrast">
+                    <h3>High Contrast</h3>
+                    <p>This text has high contrast. The black text stands out clearly against the white background, making it easy to read.</p>
+                </div>
+                <div class="contrast-box medium-contrast">
+                    <h3>Medium Contrast</h3>
+                    <p>This text has medium contrast. The gray text is less distinct from the background, requiring more effort to read.</p>
+                </div>
+                <div class="contrast-box low-contrast">
+                    <h3>Low Contrast</h3>
+                    <p>This text has low contrast. The light gray text blends with the background, making it difficult to read for many people.</p>
+                </div>
+            </div>
+            
+            <p class="explanation">For people with low vision, high contrast materials are essential. When designing accessible content, aim for a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.</p>
+        </section>
+
+        <!-- Ccolor Section -->
+        <section id="ccolor" class="section">
+            <h2>Ccolor</h2>
+            <p class="section-note">Ccolor is a custom color-vision demo inspired by color-dot tests like pseudo-isochromatic plates. This is not an official Ishihara® test and is not for diagnosis.</p>
+            
+            <div class="color-demo">
+                <canvas id="color-canvas" width="400" height="400"></canvas>
+                <div class="color-controls">
+                    <label for="color-answer">What number do you see?</label>
+                    <input type="text" id="color-answer" placeholder="Enter number">
+                    <button id="check-color-btn" class="action-btn">Check</button>
+                    <div id="color-feedback" class="feedback"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Astigmatism Section -->
+        <section id="astigmatism" class="section">
+            <h2>Astigmatism</h2>
+            <p class="section-note">This demo shows radial lines that can help identify astigmatism. This is not a substitute for professional eye examination.</p>
+            
+            <div class="astigmatism-demo">
+                <canvas id="astigmatism-canvas" width="400" height="400"></canvas>
+                <p class="instruction">Look at the center of the pattern. Do some lines appear darker, blurrier, or more distinct than others? If you notice differences, it may indicate astigmatism. Please see an eye care professional for proper testing and diagnosis.</p>
+            </div>
+        </section>
+
+        <!-- Depth Section -->
+        <section id="depth" class="section">
+            <h2>Depth Perception</h2>
+            <p class="section-note">Depth perception allows us to judge distances and see the world in three dimensions.</p>
+            
+            <div class="depth-demo">
+                <p class="explanation">Professional depth perception tests use specialized printed materials, polarized glasses, or stereoscopic devices to accurately measure depth perception. These tests require controlled lighting and viewing conditions.</p>
+                
+                <p class="explanation">Depth perception relies on several visual cues including:</p>
+                <ul>
+                    <li><strong>Binocular vision:</strong> Using both eyes together to create depth</li>
+                    <li><strong>Stereopsis:</strong> The brain's ability to combine images from both eyes</li>
+                    <li><strong>Monocular cues:</strong> Shadows, overlapping objects, and perspective</li>
+                </ul>
+                
+                <div class="depth-visual">
+                    <h3>Visual Depth Cues Demo</h3>
+                    <div class="overlapping-shapes">
+                        <div class="shape shape-1">Circle 1</div>
+                        <div class="shape shape-2">Circle 2</div>
+                        <div class="shape shape-3">Circle 3</div>
+                    </div>
+                    <p class="caption">Notice how overlapping shapes and shadows create a sense of depth. The circle with the shadow appears closer.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
