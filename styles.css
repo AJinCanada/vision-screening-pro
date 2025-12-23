@@ -182,6 +182,57 @@ header h1 {
     cursor: not-allowed;
 }
 
+/* Device next button styling */
+/* Disabled state */
+#device-next-btn:disabled,
+#device-next-btn[disabled] {
+    background-color: #95a5a6 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+    pointer-events: none !important;
+}
+
+/* Enabled state - higher specificity, comes after disabled */
+#device-next-btn.enabled:not(:disabled):not([disabled]),
+#device-next-btn.enabled {
+    background-color: #27ae60 !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#device-next-btn.enabled:hover {
+    background-color: #229954 !important;
+}
+
+/* Fallback for when enabled class is not present but button is not disabled */
+#device-next-btn:not(:disabled):not([disabled]):not(.disabled) {
+    background-color: #27ae60 !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* General button styles */
+.btn {
+    padding: 12px 24px;
+    font-size: 1em;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #229954;
+}
+
 .timer-display {
     font-size: 1.2em;
     color: #2c3e50;

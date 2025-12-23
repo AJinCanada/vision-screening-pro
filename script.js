@@ -106,12 +106,110 @@ const sentences = [
 // Device setup handlers
 function initDeviceSetup() {
     const deviceBtns = document.querySelectorAll('.device-btn');
-    const nextBtn = document.getElementById('device-next-btn');
+    let nextBtn = document.getElementById('device-next-btn');
     
-    if (!deviceBtns.length || !nextBtn) return;
+    if (!deviceBtns.length || !nextBtn) {
+        console.warn('Device setup elements not found');
+        return;
+    }
     
+    // Function to enable next button
+    function enableNextButton() {
+        nextBtn = document.getElementById('device-next-btn'); // Get fresh reference
+        if (!nextBtn) {
+            console.error('Next button not found');
+            return;
+        }
+        
+        // Remove disabled state completely
+        nextBtn.disabled = false;
+        nextBtn.removeAttribute('disabled');
+        
+        // Force enable styles
+        nextBtn.style.cursor = 'pointer';
+        nextBtn.style.opacity = '1';
+        nextBtn.style.pointerEvents = 'auto';
+        nextBtn.style.backgroundColor = '#27ae60';
+        
+        // Update classes
+        nextBtn.classList.remove('disabled');
+        nextBtn.classList.add('enabled');
+        
+        console.log('Next button enabled:', {
+            disabled: nextBtn.disabled,
+            disabledAttr: nextBtn.hasAttribute('disabled'),
+            cursor: nextBtn.style.cursor,
+            pointerEvents: nextBtn.style.pointerEvents,
+            classes: nextBtn.className
+        });
+    }
+    
+    // Function to handle next button click
+    function handleNextButtonClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        nextBtn = document.getElementById('device-next-btn'); // Get fresh reference
+        if (!nextBtn) {
+            console.error('Next button not found in click handler');
+            return false;
+        }
+        
+        console.log('Next button clicked!', {
+            disabled: nextBtn.disabled,
+            disabledAttr: nextBtn.hasAttribute('disabled'),
+            hasEnabledClass: nextBtn.classList.contains('enabled'),
+            deviceState: state.device
+        });
+        
+        // Check if button is actually enabled
+        if (nextBtn.disabled || nextBtn.hasAttribute('disabled') || !nextBtn.classList.contains('enabled')) {
+            console.warn('Next button is disabled - please select a device first');
+            alert('Please select a device size first');
+            return false;
+        }
+        
+        if (!state.device || !state.device.pxPerMM) {
+            console.error('Device not selected or calibrated', state.device);
+            alert('Please select a device size first');
+            return false;
+        }
+        
+        console.log('Navigating to reading test...');
+        console.log('Device state:', state.device);
+        
+        // Navigate to reading test
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.section');
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        sections.forEach(section => section.classList.remove('active'));
+        
+        const readBtn = document.querySelector('.nav-btn[data-section="readthechart"]');
+        const readSection = document.getElementById('readthechart');
+        if (readBtn && readSection) {
+            readBtn.classList.add('active');
+            readSection.classList.add('active');
+            console.log('Navigated to reading test section');
+            // Initialize reading test after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                if (typeof initReadingTest === 'function') {
+                    initReadingTest();
+                } else {
+                    console.warn('initReadingTest function not found');
+                }
+            }, 100);
+        } else {
+            console.error('Reading test section not found', { readBtn, readSection });
+        }
+        
+        return false;
+    }
+    
+    // Set up device button handlers
     deviceBtns.forEach(btn => {
         btn.addEventListener('click', function() {
+            console.log('Device button clicked:', this.dataset.diagonal, this.dataset.type);
+            
             // Remove active from all
             deviceBtns.forEach(b => b.classList.remove('active'));
             // Add active to selected
@@ -139,31 +237,47 @@ function initDeviceSetup() {
             console.log(`Device: ${diagonal}" ${type}, PPI: ${ppi.toFixed(1)}, pxPerMM: ${pxPerMM.toFixed(2)}`);
             
             // Enable next button
-            nextBtn.disabled = false;
+            enableNextButton();
         });
     });
     
-    nextBtn.addEventListener('click', function() {
-        // Navigate to reading test
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const sections = document.querySelectorAll('.section');
-        navButtons.forEach(btn => btn.classList.remove('active'));
-        sections.forEach(section => section.classList.remove('active'));
+    // Set up next button handler - use both onclick and addEventListener
+    if (nextBtn) {
+        // Remove any existing handlers first
+        nextBtn.onclick = null;
+        nextBtn.removeEventListener('click', handleNextButtonClick);
         
-        const readBtn = document.querySelector('.nav-btn[data-section="readthechart"]');
-        const readSection = document.getElementById('readthechart');
-        if (readBtn && readSection) {
-            readBtn.classList.add('active');
-            readSection.classList.add('active');
-            initReadingTest();
-        }
-    });
+        // Add new handlers
+        nextBtn.onclick = handleNextButtonClick;
+        nextBtn.addEventListener('click', handleNextButtonClick);
+        
+        // Also handle mousedown and touchstart for better mobile support
+        nextBtn.addEventListener('mousedown', function(e) {
+            if (!nextBtn.disabled && nextBtn.classList.contains('enabled')) {
+                handleNextButtonClick(e);
+            }
+        });
+        
+        console.log('Device setup initialized, next button handler attached');
+    } else {
+        console.error('Next button not found during initialization');
+    }
 }
 
 // Navigation functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize device setup
+    // Initialize device setup - try multiple times if needed
     initDeviceSetup();
+    
+    // Fallback initialization if elements weren't ready
+    setTimeout(() => {
+        const nextBtn = document.getElementById('device-next-btn');
+        if (nextBtn && !nextBtn.hasAttribute('data-initialized')) {
+            console.log('Re-initializing device setup...');
+            initDeviceSetup();
+            nextBtn.setAttribute('data-initialized', 'true');
+        }
+    }, 500);
     
     // Set up navigation buttons
     const navButtons = document.querySelectorAll('.nav-btn');
