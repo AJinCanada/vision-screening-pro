@@ -1029,9 +1029,12 @@ function initContrastTest() {
   const lineLetters = etdrsLineSizes.map(() => generateETDRSLine());
   
   function showContrastPage(pageIndex) {
+    // Add class to body to control overflow
+    document.body.classList.add('contrast-test-active');
+    
     const level = contrastLevels[pageIndex];
     const bgColor = `rgb(255, 255, 255)`; // White background
-    const fgColor = `rgb(${level.rgb.r}, ${level.rgb.g}, ${level.rgb.b})`;
+    const fgColor = { r: level.rgb.r, g: level.rgb.g, b: level.rgb.b };
     
     let chartHTML = `
       <div class="contrast-page">
@@ -1045,17 +1048,10 @@ function initContrastTest() {
         </div>
         
         <div class="instructions-box">
-          <p><strong>Instructions:</strong></p>
-          <ul>
-            <li>Viewing distance: <strong>40cm (16 inches)</strong></li>
-            <li>Read the letters from <strong>TOP to BOTTOM</strong></li>
-            <li>Read <strong>LEFT to RIGHT</strong> on each line</li>
-            <li>When you reach a line where you <strong>cannot read 4 out of 5 letters</strong>, stop</li>
-            <li>Record the <strong>last line you could read</strong> (4/5 correct)</li>
-          </ul>
+          <p><strong>View at 40cm (16 inches).</strong> Read from top to bottom. Stop when you cannot read 4/5 letters.</p>
         </div>
         
-        <div class="etdrs-chart-container" style="background: ${bgColor}; padding: 30px 20px; border: 2px solid #ccc; margin: 20px auto; max-width: 95%; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto;">
+        <div class="etdrs-chart-container" style="background: ${bgColor};">
     `;
     
     // Generate all ETDRS lines with CORRECT ETDRS spacing standard
@@ -1069,36 +1065,37 @@ function initContrastTest() {
       // For ETDRS standard (1 letter-width between), use fontSize
       let letterSpacing = fontSize; // ETDRS standard: 1 letter-width
       
-      // Calculate total width needed: 5 letters + 4 spacings + labels
-      const screenWidth = window.innerWidth || 1200;
-      const availableWidth = screenWidth * 0.7; // Use 70% of screen width for letters
-      const totalLineWidth = (fontSize * 5) + (letterSpacing * 4) + 200; // +200 for labels
+      // Calculate responsive letter spacing
+      // Standard ETDRS: spacing = fontSize (1 letter-width)
+      // Adjust for screen width
+      const screenWidth = window.innerWidth;
+      const labelWidth = 100; // Combined width of line number + snellen labels
+      const availableWidth = screenWidth - labelWidth - 40; // -40 for padding/margins
       
-      // If line too wide for screen, scale down spacing proportionally
-      // But maintain ETDRS standard as much as possible
-      if (totalLineWidth > availableWidth && fontSize > 20) {
-        const scaleFactor = (availableWidth - 200) / ((fontSize * 5) + (letterSpacing * 4));
-        letterSpacing = letterSpacing * scaleFactor * 0.9; // Slight reduction for safety
+      // Total width needed: 5 letters + 4 spaces between
+      const standardSpacing = fontSize * 0.95; // ETDRS standard (close to 1 letter-width)
+      const totalWidthNeeded = (fontSize * 5) + (standardSpacing * 4);
+      
+      // If too wide, scale down proportionally
+      let actualSpacing = standardSpacing;
+      if (totalWidthNeeded > availableWidth) {
+        const scaleFactor = availableWidth / totalWidthNeeded;
+        actualSpacing = standardSpacing * scaleFactor;
       }
       
       chartHTML += `
-        <div class="etdrs-line" data-line="${idx + 1}" style="display: flex; align-items: center; justify-content: center; gap: 20px; margin: 5px 0; min-height: ${Math.max(30, fontSize * 1.2)}px; white-space: nowrap;">
-          <div class="line-number-label" style="min-width: 40px; text-align: right; font-size: 14px; font-weight: bold; color: #666; flex-shrink: 0;">${idx + 1}</div>
+        <div class="etdrs-line" data-line="${idx + 1}">
+          <div class="line-number-label">${idx + 1}</div>
           <div class="line-letters-container" 
-               style="display: inline-block;
-                      color: rgb(${fgColor.r}, ${fgColor.g}, ${fgColor.b});
+               style="color: rgb(${fgColor.r}, ${fgColor.g}, ${fgColor.b});
                       font-size: ${fontSize}px;
                       font-family: 'Courier New', monospace;
                       font-weight: bold;
-                      letter-spacing: ${letterSpacing}px;
-                      white-space: nowrap;
-                      text-align: center;
-                      padding: ${fontSize * 0.15}px 0;
-                      flex-grow: 0;
-                      flex-shrink: 1;">
+                      letter-spacing: ${actualSpacing}px;
+                      white-space: nowrap;">
             ${letters.join('')}
           </div>
-          <div class="line-snellen-label" style="min-width: 80px; text-align: left; font-size: 14px; color: #666; flex-shrink: 0;">${lineSize.snellen}</div>
+          <div class="line-snellen-label">${lineSize.snellen}</div>
         </div>
       `;
     });
@@ -1106,9 +1103,9 @@ function initContrastTest() {
     chartHTML += `
         </div>
         
-        <div class="contrast-response-box" style="margin: 30px 0; padding: 25px; background: #fff9c4; border-radius: 8px; border: 2px solid #fbc02d;">
-          <label for="smallest-line" style="display: block; margin-bottom: 15px; font-size: 18px;"><strong>What is the SMALLEST line number you can read (4 out of 5 letters correct)?</strong></label>
-          <select id="smallest-line" class="line-select" style="width: 100%; max-width: 400px; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 6px;">
+        <div class="contrast-response-box">
+          <label for="smallest-line">Smallest line number you can read (4/5 letters correct)?</label>
+          <select id="smallest-line" class="line-select">
             <option value="">-- Select line number --</option>
             ${etdrsLineSizes.map((line, idx) => `
               <option value="${idx + 1}">Line ${idx + 1} - ${line.snellen}</option>
@@ -1117,12 +1114,12 @@ function initContrastTest() {
           </select>
         </div>
         
-        <div class="navigation-buttons" style="display: flex; justify-content: space-between; gap: 15px; margin-top: 30px;">
-          <button id="prev-page-btn" class="btn btn-secondary" ${pageIndex === 0 ? 'disabled' : ''} style="min-width: 200px; padding: 15px 30px; font-size: 16px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            ← Previous Contrast Level
+        <div class="navigation-buttons">
+          <button id="prev-page-btn" class="btn btn-secondary" ${pageIndex === 0 ? 'disabled' : ''}>
+            ← Previous
           </button>
-          <button id="next-page-btn" class="btn btn-primary" style="min-width: 200px; padding: 15px 30px; font-size: 16px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            ${pageIndex === contrastLevels.length - 1 ? 'Finish Test →' : 'Next Contrast Level →'}
+          <button id="next-page-btn" class="btn btn-primary">
+            ${pageIndex === contrastLevels.length - 1 ? 'Finish Test →' : 'Next Contrast →'}
           </button>
         </div>
       </div>
@@ -1164,8 +1161,14 @@ function initContrastTest() {
     }
   }
   
+  // Clean up body class when leaving test
+  function cleanupContrastTest() {
+    document.body.classList.remove('contrast-test-active');
+  }
+  
   // Show results
   function showContrastResults(results) {
+    cleanupContrastTest();
     // Find best performance (smallest letters at lowest contrast)
     let bestResult = null;
     for (let i = results.length - 1; i >= 0; i--) {

@@ -569,43 +569,298 @@ header h1 {
     margin-bottom: 30px;
 }
 
-/* ETDRS Contrast Chart Styles - Clinical Standard Spacing */
-.etdrs-chart-container {
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+/* ============================================
+   CONTRAST CHART - FULL WIDTH LAYOUT
+   ============================================ */
+
+/* Overall page container - remove constraints */
+.contrast-page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 10px 5px;
+    box-sizing: border-box;
 }
+
+/* Header section - keep centered but compact */
+.contrast-page-header {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 0 10px;
+}
+
+.contrast-page-header h3 {
+    font-size: 22px;
+    margin: 10px 0;
+}
+
+.contrast-level-info {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    align-items: center;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.contrast-badge {
+    background: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.page-indicator {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Instructions - keep compact */
+.instructions-box {
+    background: #e3f2fd;
+    border-left: 4px solid #2196F3;
+    padding: 12px 15px;
+    margin: 10px 5px;
+    border-radius: 6px;
+}
+
+.instructions-box p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+/* ============================================
+   ETDRS CHART CONTAINER - FULL WIDTH
+   ============================================ */
+
+.etdrs-chart-container {
+    /* CRITICAL: Use full viewport width */
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(-50vw + 50%); /* Center full-width within parent */
+    
+    /* Minimal padding to prevent edge cutoff */
+    padding: 20px 10px;
+    
+    /* Background and borders */
+    background: rgb(255, 255, 255);
+    border: none;
+    border-top: 2px solid #e0e0e0;
+    border-bottom: 2px solid #e0e0e0;
+    
+    /* Layout */
+    box-sizing: border-box;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    
+    /* Optional subtle shadow */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* ============================================
+   ETDRS LINE LAYOUT - RESPONSIVE
+   ============================================ */
 
 .etdrs-line {
-    white-space: nowrap; /* Prevent line wrapping */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Reduced gap to save space */
+    margin: 3px 0;
+    min-height: 20px;
+    white-space: nowrap;
+    padding: 0 5px;
 }
 
+/* Line number label - compact */
 .line-number-label {
+    min-width: 30px;
+    width: 30px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: bold;
+    color: #888;
     flex-shrink: 0;
 }
 
+/* Letters container - allow flex growth */
 .line-letters-container {
-    flex-shrink: 1; /* Allow shrinking if needed for very large letters */
+    flex-grow: 0;
+    flex-shrink: 0; /* Don't shrink - maintain size */
+    text-align: center;
 }
 
+/* Snellen label - compact */
 .line-snellen-label {
+    min-width: 60px;
+    width: 60px;
+    text-align: left;
+    font-size: 12px;
+    color: #888;
     flex-shrink: 0;
 }
 
-/* For mobile/small screens - adjust ETDRS layout */
-@media (max-width: 768px) {
+/* ============================================
+   RESPONSIVE DESIGN - ALL DEVICE TYPES
+   ============================================ */
+
+/* Large screens (desktop monitors) */
+@media (min-width: 1200px) {
     .etdrs-chart-container {
-        padding: 20px 10px;
+        padding: 30px 20px;
+    }
+    
+    .etdrs-line {
+        gap: 12px;
     }
     
     .line-number-label,
     .line-snellen-label {
-        min-width: 30px;
-        font-size: 12px;
+        font-size: 14px;
+    }
+}
+
+/* Medium screens (tablets, laptops) */
+@media (min-width: 768px) and (max-width: 1199px) {
+    .etdrs-chart-container {
+        padding: 25px 15px;
     }
     
     .etdrs-line {
         gap: 10px;
     }
+    
+    .line-number-label {
+        min-width: 35px;
+        width: 35px;
+    }
+    
+    .line-snellen-label {
+        min-width: 70px;
+        width: 70px;
+    }
+}
+
+/* Small screens (phones, small tablets) */
+@media (max-width: 767px) {
+    .contrast-page {
+        padding: 5px 2px;
+    }
+    
+    .etdrs-chart-container {
+        padding: 15px 5px;
+        margin-left: calc(-50vw + 50%);
+    }
+    
+    .etdrs-line {
+        gap: 5px;
+    }
+    
+    .line-number-label {
+        min-width: 25px;
+        width: 25px;
+        font-size: 10px;
+    }
+    
+    .line-snellen-label {
+        min-width: 50px;
+        width: 50px;
+        font-size: 10px;
+    }
+    
+    .contrast-badge {
+        font-size: 16px;
+        padding: 6px 12px;
+    }
+    
+    .instructions-box {
+        padding: 10px;
+        font-size: 12px;
+    }
+}
+
+/* Extra small screens (small phones) */
+@media (max-width: 480px) {
+    .etdrs-line {
+        gap: 3px;
+    }
+    
+    .line-number-label,
+    .line-snellen-label {
+        min-width: 20px;
+        width: 20px;
+        font-size: 9px;
+    }
+}
+
+/* ============================================
+   RESPONSE BOX - FULL WIDTH
+   ============================================ */
+
+.contrast-response-box {
+    margin: 15px 5px;
+    padding: 15px;
+    background: #fff9c4;
+    border-radius: 8px;
+    border: 2px solid #fbc02d;
+    max-width: 100%;
+}
+
+.contrast-response-box label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.line-select {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* ============================================
+   NAVIGATION BUTTONS - RESPONSIVE
+   ============================================ */
+
+.navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 20px 5px;
+    flex-wrap: wrap;
+}
+
+.navigation-buttons .btn {
+    flex: 1;
+    min-width: 140px;
+    max-width: 250px;
+    padding: 12px 20px;
+    font-size: 16px;
+}
+
+@media (max-width: 480px) {
+    .navigation-buttons {
+        flex-direction: column;
+    }
+    
+    .navigation-buttons .btn {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* ============================================
+   PREVENT BODY SCROLL DURING TEST
+   ============================================ */
+
+body.contrast-test-active {
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 /* Contrast Chart Styles */

@@ -26,3 +26,4 @@ echo "   2. Source: main branch, / (root)"
 echo "   3. Click Save"
 echo ""
 echo "⏱️  Wait 2-3 minutes for deployment to complete"
+
