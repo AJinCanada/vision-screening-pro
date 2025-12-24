@@ -9,6 +9,8 @@ class SpeechRecognitionManager {
     this.startTime = null;
     this.endTime = null;
     this.callbacks = {};
+    this.timerInterval = null; // ADD: Store timer reference
+    this.silenceTimeout = null; // ADD: Detect when user stops speaking
     
     // Initialize Speech Recognition
     this.initRecognition();
@@ -49,6 +51,9 @@ class SpeechRecognitionManager {
       return false;
     }
 
+    // Clear any existing timers
+    this.clearTimers();
+
     this.currentSentence = sentence;
     this.targetWords = this.extractWords(sentence);
     this.recognizedWords = [];
@@ -75,6 +80,19 @@ class SpeechRecognitionManager {
       this.recognition.stop();
       this.isListening = false;
       this.endTime = Date.now();
+      this.clearTimers(); // CRITICAL: Clear all timers
+    }
+  }
+
+  // NEW: Clear all active timers
+  clearTimers() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    if (this.silenceTimeout) {
+      clearTimeout(this.silenceTimeout);
+      this.silenceTimeout = null;
     }
   }
 
@@ -98,6 +116,13 @@ class SpeechRecognitionManager {
   // Handle speech detection start
   handleSpeechStart() {
     console.log('Speech detected');
+    
+    // Clear silence timeout when speech starts
+    if (this.silenceTimeout) {
+      clearTimeout(this.silenceTimeout);
+      this.silenceTimeout = null;
+    }
+    
     if (this.callbacks.onSpeechStart) {
       this.callbacks.onSpeechStart();
     }
@@ -106,6 +131,21 @@ class SpeechRecognitionManager {
   // Handle speech detection end
   handleSpeechEnd() {
     console.log('Speech ended');
+    
+    // Set timeout to auto-stop after 2 seconds of silence
+    this.silenceTimeout = setTimeout(() => {
+      if (this.isListening) {
+        console.log('Auto-stopping after silence');
+        const progress = this.calculateProgress();
+        
+        // Only auto-stop if we've recognized some words
+        if (progress.percentage >= 50) {
+          this.stopListening();
+          this.finalizeSentence();
+        }
+      }
+    }, 2000); // 2 seconds of silence
+    
     if (this.callbacks.onSpeechEnd) {
       this.callbacks.onSpeechEnd();
     }
@@ -195,7 +235,7 @@ class SpeechRecognitionManager {
     const maxLength = Math.max(word1.length, word2.length);
     const similarity = 1 - (distance / maxLength);
     
-    return similarity >= 0.8; // 80% similarity threshold
+    return similarity >= 0.75; // Reduced threshold to 75% for better matching
   }
 
   // Calculate Levenshtein distance (edit distance between strings)
@@ -231,13 +271,18 @@ class SpeechRecognitionManager {
   isSentenceComplete() {
     const progress = this.calculateProgress();
     
-    // Consider complete if 90% of words are recognized
+    // Consider complete if 85% of words are recognized (reduced from 90% for better UX)
     // This accounts for minor speech recognition errors
-    return progress.percentage >= 90;
+    return progress.percentage >= 85;
   }
 
   // Finalize sentence reading
   finalizeSentence() {
+    // Ensure we have end time
+    if (!this.endTime) {
+      this.endTime = Date.now();
+    }
+    
     const readingTime = (this.endTime - this.startTime) / 1000; // seconds
     const progress = this.calculateProgress();
     
@@ -245,7 +290,7 @@ class SpeechRecognitionManager {
     const errors = this.targetWords.length - progress.matched;
     
     // Calculate words per minute (WPM)
-    const wordsPerMinute = Math.round((progress.matched / readingTime) * 60);
+    const wordsPerMinute = readingTime > 0 ? Math.round((progress.matched / readingTime) * 60) : 0;
     
     const result = {
       sentence: this.currentSentence,
@@ -269,6 +314,9 @@ class SpeechRecognitionManager {
   handleError(event) {
     console.error('Speech recognition error:', event.error);
     
+    // Clear timers on error
+    this.clearTimers();
+    
     let errorMessage = 'Speech recognition error: ';
     
     switch (event.error) {
@@ -276,14 +324,17 @@ class SpeechRecognitionManager {
         errorMessage += 'No speech detected. Please speak clearly.';
         break;
       case 'audio-capture':
-        errorMessage += 'No microphone found. Please connect a microphone.';
+        errorMessage += 'No microphone found.';
         break;
       case 'not-allowed':
-        errorMessage += 'Microphone access denied. Please allow microphone access.';
+        errorMessage += 'Microphone access denied.';
         break;
       case 'network':
-        errorMessage += 'Network error. Please check your internet connection.';
+        errorMessage += 'Network error. Check internet connection.';
         break;
+      case 'aborted':
+        // Don't show error for intentional stops
+        return;
       default:
         errorMessage += event.error;
     }
@@ -297,6 +348,7 @@ class SpeechRecognitionManager {
   handleEnd() {
     console.log('Recognition ended');
     this.isListening = false;
+    this.clearTimers(); // CRITICAL: Clear timers when recognition ends
     
     if (this.callbacks.onEnd) {
       this.callbacks.onEnd();

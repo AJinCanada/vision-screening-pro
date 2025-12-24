@@ -502,6 +502,25 @@ function initReadingTest() {
     setupReadingTestHandlers();
 }
 
+// Global timer management for reading test
+let readingTestTimers = {};
+
+// Helper function to stop timer for a specific line
+function stopReadingTimer(lineIdx) {
+    if (readingTestTimers[lineIdx]) {
+        clearInterval(readingTestTimers[lineIdx]);
+        delete readingTestTimers[lineIdx];
+        console.log(`Reading timer stopped for line ${lineIdx}`);
+    }
+}
+
+// Helper function to stop all reading timers
+function stopAllReadingTimers() {
+    Object.keys(readingTestTimers).forEach(lineIdx => {
+        stopReadingTimer(parseInt(lineIdx));
+    });
+}
+
 // Reading test handlers
 function setupReadingTestHandlers() {
     const startTestBtn = document.getElementById('start-reading-test-btn');
@@ -513,7 +532,7 @@ function setupReadingTestHandlers() {
     let readingData = [];
     let currentLineIndex = null;
     let lineStartTime = null;
-    let transcriptBuffer = '';
+    let transcriptBuffer = [];
     
     startTestBtn.addEventListener('click', function() {
         document.querySelector('.reading-instructions').style.display = 'none';
@@ -541,13 +560,16 @@ function setupReadingTestHandlers() {
             const line = document.querySelector(`.reading-line[data-index="${idx}"]`);
             const timerDisplay = document.getElementById(`timer-${idx}`);
             
+            // CRITICAL: Stop any existing timer for this line
+            stopReadingTimer(idx);
+            
             // Start timing
             currentLineIndex = idx;
             lineStartTime = performance.now();
             
-            // Update timer display
-            const timerInterval = setInterval(() => {
-                if (currentLineIndex === idx) {
+            // Update timer display - FIXED: Store timer reference properly
+            readingTestTimers[idx] = setInterval(() => {
+                if (currentLineIndex === idx && lineStartTime) {
                     const elapsed = (performance.now() - lineStartTime) / 1000;
                     const seconds = Math.floor(elapsed);
                     const ms = Math.floor((elapsed % 1) * 100);
@@ -555,12 +577,10 @@ function setupReadingTestHandlers() {
                         timerDisplay.textContent = `${seconds}.${ms.toString().padStart(2, '0')}s`;
                     }
                 } else {
-                    clearInterval(timerInterval);
+                    // Timer should stop if line changed
+                    stopReadingTimer(idx);
                 }
             }, 50);
-            
-            // Store interval for cleanup
-            this.dataset.timerInterval = timerInterval;
             
             // UI updates
             this.textContent = '⏹ Stop';
@@ -568,9 +588,10 @@ function setupReadingTestHandlers() {
             this.classList.remove('btn-start-line');
             line.classList.add('reading-active');
             
-            // Change to stop handler
+            // Change to stop handler - FIXED: Properly clear timer
             this.onclick = function() {
-                clearInterval(parseInt(this.dataset.timerInterval));
+                // CRITICAL: Stop timer first
+                stopReadingTimer(idx);
                 
                 const endTime = performance.now();
                 const readingTimeSeconds = (endTime - lineStartTime) / 1000;
@@ -608,8 +629,13 @@ function setupReadingTestHandlers() {
                 line.classList.remove('reading-active');
                 line.classList.add('reading-complete');
                 
+                // Reset current line index
+                currentLineIndex = null;
+                lineStartTime = null;
+                
                 // Check if all lines completed
                 if (readingData.filter(d => d).length === readingMValues.length) {
+                    stopAllReadingTimers(); // Clean up all timers
                     finishReadingTest(readingData);
                 }
             };
@@ -619,6 +645,9 @@ function setupReadingTestHandlers() {
 
 // Calculate CPS and TPS from reading data
 function finishReadingTest(data) {
+    // Stop all timers
+    stopAllReadingTimers();
+    
     if (recognition && isListening) {
         recognition.stop();
         isListening = false;
