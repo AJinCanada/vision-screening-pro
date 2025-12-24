@@ -480,7 +480,13 @@ header h1 {
 }
 
 .reading-line {
-    /* Clinical layout - no borders, just flex container */
+    display: flex;
+    align-items: flex-start; /* Align to top for multi-line text */
+    justify-content: space-between;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 10px 5px;
+    border-bottom: 1px solid #f0f0f0;
     transition: all 0.3s;
 }
 
@@ -650,30 +656,98 @@ header h1 {
     font-weight: bold;
     color: #666;
     flex-shrink: 0;
+    padding-right: 5px;
+    padding-top: 5px; /* Align with first line of text */
 }
 
 /* Center - Letters or sentence */
 .line-letters-container,
-.sentence-text {
+/* Center - Text wrapper with controls */
+.sentence-text-wrapper {
     flex-grow: 1;
-    text-align: center;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0; /* Allow shrinking */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .sentence-text {
     text-align: left; /* Left-align for reading sentences */
+    white-space: normal; /* Allow wrapping */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+/* Inline controls under sentence */
+.reading-controls-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-start-reading,
+.btn-stop {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: none;
+    border-radius: 4px;
+    background: #2196F3;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-start-reading:hover {
+    background: #1976D2;
+}
+
+.btn-stop {
+    background: #f44336;
+}
+
+.btn-start-reading:disabled {
+    background: #4CAF50;
+    cursor: default;
+}
+
+.reading-timer {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: #2196F3;
+    min-width: 60px;
+}
+
+.reading-errors-display {
+    font-size: 13px;
+    color: #666;
+}
+
+.btn-errors-inline {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: white;
+    cursor: pointer;
 }
 
 /* Right side - Snellen + M-value (stacked) */
 .line-labels-right {
-    min-width: 90px;
-    width: 90px;
+    min-width: 100px;
+    width: 100px;
     text-align: left;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     line-height: 1.3;
+    padding-top: 5px; /* Align with first line of text */
+    padding-left: 10px; /* Add right padding */
 }
 
 .line-snellen-label {
@@ -697,7 +771,7 @@ header h1 {
     width: 100vw;
     max-width: 100vw;
     margin-left: calc(-50vw + 50%);
-    padding: 20px 10px;
+    padding: 20px 15px 20px 10px; /* Extra right padding for labels */
     background: rgb(255, 255, 255);
     border: none;
     border-top: 2px solid #e0e0e0;

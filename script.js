@@ -423,35 +423,43 @@ function initReadingTest() {
         const fontSize = calculateFontSizeFromM(level.m, state.device.pxPerMM);
         const lineNumber = idx + 1;
         
+        // Calculate available width for text to prevent cutoff
+        const screenWidth = window.innerWidth;
+        const reservedWidth = 170; // Line number (40px) + Right labels (100px) + gaps (30px)
+        const textMaxWidth = Math.max(200, screenWidth - reservedWidth);
+        
         chartHTML += `
             <div class="reading-line" data-index="${idx}" data-m="${level.m}" data-line="${lineNumber}">
                 <!-- LEFT: Line number -->
                 <div class="line-number-label">${lineNumber}</div>
                 
-                <!-- CENTER: Sentence text -->
-                <div class="sentence-text" 
-                     style="font-size: ${fontSize}px;
-                            font-family: 'Times New Roman', Times, serif;
-                            color: #000;
-                            line-height: 1.3;
-                            text-align: left;
-                            padding: 5px 10px;">
-                    ${sentence}
+                <!-- CENTER: Sentence text with wrapping -->
+                <div class="sentence-text-wrapper" style="max-width: ${textMaxWidth}px;">
+                    <div class="sentence-text" 
+                         style="font-size: ${fontSize}px;
+                                font-family: 'Times New Roman', Times, serif;
+                                color: #000;
+                                line-height: 1.4;
+                                text-align: left;
+                                word-wrap: break-word;
+                                overflow-wrap: break-word;
+                                white-space: normal;">
+                        ${sentence}
+                    </div>
+                    
+                    <!-- Control buttons below text -->
+                    <div class="reading-controls-inline">
+                        <button class="btn-start-line" data-index="${idx}">▶ Start</button>
+                        <span class="reading-time" id="timer-${idx}">--:--</span>
+                        <input type="number" class="reading-errors" placeholder="Errors" min="0" max="10" style="width: 70px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 3px; font-size: 12px;" />
+                    </div>
                 </div>
                 
-                <!-- RIGHT: Snellen + M-value -->
+                <!-- RIGHT: Snellen + M-value (stacked vertically) -->
                 <div class="line-labels-right">
                     <span class="line-snellen-label">${level.snellen}</span>
                     <span class="line-m-value-label">${level.m}M</span>
                 </div>
-            </div>
-            
-            <!-- Reading controls below each line -->
-            <div class="reading-controls" style="display: flex; gap: 10px; align-items: center; margin: 5px 0 15px 0; padding-left: 45px;">
-                <button class="btn-start-line" data-index="${idx}" style="min-width: 100px; padding: 8px 15px; font-size: 14px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">▶ Start</button>
-                <button class="btn-stop-line" data-index="${idx}" style="display:none; min-width: 100px; padding: 8px 15px; font-size: 14px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">⏹ Stop</button>
-                <span class="reading-time" style="font-weight: bold; color: #4CAF50; min-width: 150px; margin: 0 10px;"></span>
-                <input type="number" class="reading-errors" placeholder="Errors" min="0" max="10" style="width: 80px; padding: 5px; text-align: center; border: 1px solid #ddd; border-radius: 3px;" />
             </div>
         `;
     });
@@ -509,60 +517,80 @@ function setupReadingTestHandlers() {
         btn.addEventListener('click', function() {
             const idx = parseInt(this.dataset.index);
             const line = document.querySelector(`.reading-line[data-index="${idx}"]`);
+            const timerDisplay = document.getElementById(`timer-${idx}`);
             
             // Start timing
             currentLineIndex = idx;
             lineStartTime = performance.now();
             
+            // Update timer display
+            const timerInterval = setInterval(() => {
+                if (currentLineIndex === idx) {
+                    const elapsed = (performance.now() - lineStartTime) / 1000;
+                    const seconds = Math.floor(elapsed);
+                    const ms = Math.floor((elapsed % 1) * 100);
+                    if (timerDisplay) {
+                        timerDisplay.textContent = `${seconds}.${ms.toString().padStart(2, '0')}s`;
+                    }
+                } else {
+                    clearInterval(timerInterval);
+                }
+            }, 50);
+            
+            // Store interval for cleanup
+            this.dataset.timerInterval = timerInterval;
+            
             // UI updates
-            this.style.display = 'none';
-            line.querySelector('.btn-stop-line').style.display = 'inline-block';
+            this.textContent = '⏹ Stop';
+            this.classList.add('btn-stop');
+            this.classList.remove('btn-start-line');
             line.classList.add('reading-active');
-        });
-    });
-    
-    document.querySelectorAll('.btn-stop-line').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            const line = document.querySelector(`.reading-line[data-index="${idx}"]`);
             
-            // Stop timing
-            const endTime = performance.now();
-            const readingTimeSeconds = (endTime - lineStartTime) / 1000;
-            
-            // Get errors
-            const errorsInput = line.querySelector('.reading-errors');
-            const errors = parseInt(errorsInput.value) || 0;
-            
-            // Get the sentence and count words
-            const sentence = mnreadSentences[idx % mnreadSentences.length];
-            const wordCount = sentence.split(/\s+/).length;
-            
-            // Calculate WPM: 60 × (words_in_sentence - errors) / time_seconds
-            const wordsRead = Math.max(0, wordCount - errors);
-            const wpm = readingTimeSeconds > 0 ? Math.round(60 * wordsRead / readingTimeSeconds) : 0;
-            
-            // Store data
-            readingData[idx] = {
-                mValue: readingMValues[idx].m,
-                snellen: readingMValues[idx].snellen,
-                readingTime: readingTimeSeconds.toFixed(2),
-                errors: errors,
-                wpm: wpm > 0 ? wpm : 0
+            // Change to stop handler
+            this.onclick = function() {
+                clearInterval(parseInt(this.dataset.timerInterval));
+                
+                const endTime = performance.now();
+                const readingTimeSeconds = (endTime - lineStartTime) / 1000;
+                
+                // Get errors
+                const errorsInput = line.querySelector('.reading-errors');
+                const errors = parseInt(errorsInput.value) || 0;
+                
+                // Get the sentence and count words
+                const sentence = mnreadSentences[idx % mnreadSentences.length];
+                const wordCount = sentence.split(/\s+/).length;
+                
+                // Calculate WPM: 60 × (words_in_sentence - errors) / time_seconds
+                const wordsRead = Math.max(0, wordCount - errors);
+                const wpm = readingTimeSeconds > 0 ? Math.round(60 * wordsRead / readingTimeSeconds) : 0;
+                
+                // Store data
+                readingData[idx] = {
+                    mValue: readingMValues[idx].m,
+                    snellen: readingMValues[idx].snellen,
+                    readingTime: readingTimeSeconds.toFixed(2),
+                    errors: errors,
+                    wpm: wpm > 0 ? wpm : 0
+                };
+                
+                // Display time
+                if (timerDisplay) {
+                    timerDisplay.textContent = `${readingTimeSeconds.toFixed(1)}s (${wpm} WPM)`;
+                }
+                
+                // UI updates
+                this.textContent = '✓ Done';
+                this.disabled = true;
+                this.style.background = '#4CAF50';
+                line.classList.remove('reading-active');
+                line.classList.add('reading-complete');
+                
+                // Check if all lines completed
+                if (readingData.filter(d => d).length === readingMValues.length) {
+                    finishReadingTest(readingData);
+                }
             };
-            
-            // Display time
-            line.querySelector('.reading-time').textContent = `${readingTimeSeconds.toFixed(1)}s - ${wpm} WPM`;
-            
-            // UI updates
-            this.style.display = 'none';
-            line.classList.remove('reading-active');
-            line.classList.add('reading-complete');
-            
-            // Check if all lines completed
-            if (readingData.filter(d => d).length === readingMValues.length) {
-                finishReadingTest(readingData);
-            }
         });
     });
 }
