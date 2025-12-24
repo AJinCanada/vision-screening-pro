@@ -65,16 +65,20 @@ function snellenToM(snellenDenom) {
   return snellenDenom / 50;
 }
 
-// Calculate font size from M-value (CORRECT formula)
-// Lighthouse standard: At 40cm, 1M = 1.454mm x-height
+// Calculate font size from M-value (MNREAD CLINICAL STANDARD)
+// MNREAD official specification: At 40cm viewing distance, 1M = 1.476mm x-height
+// Source: MNREAD App User Guide (Precision Vision)
+// Data: "6.3M to 0.32M or 9.3mm to 0.5mm x-height" at 40cm
+// Calculation: 9.3mm ÷ 6.3M = 1.476mm per M-unit
 function calculateFontSizeFromM(mValue, pxPerMM, viewingDistanceCm = 40) {
-  // Lighthouse standard: At 40cm, 1M = 1.454mm x-height
-  const xHeightMm = mValue * 1.454;
+  // MNREAD clinical standard: At 40cm, 1M = 1.476mm x-height
+  const xHeightMm = mValue * 1.476;
   
-  // Convert to pixels
+  // Convert to pixels using device calibration
   const xHeightPx = xHeightMm * pxPerMM;
   
-  // Font size is approximately 1.4x the x-height
+  // Font size is approximately 1.4x the x-height (typical for sans-serif fonts)
+  // This accounts for ascenders/descenders in full letter height
   return xHeightPx * 1.4;
 }
 
