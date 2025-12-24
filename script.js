@@ -337,8 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     initContrastTest();
                 } else if (targetSection === 'ccolor') {
                     initCcolor();
-                } else if (targetSection === 'depth') {
-                    initDepth();
                 }
             }
         });
@@ -354,9 +352,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize Ccolor
     initCcolor();
-    
-    // Initialize Depth
-    initDepth();
 });
 
 // Voice recognition setup
@@ -941,44 +936,44 @@ function showColorResults(results) {
     `;
 }
 
-// Pelli-Robson Style Contrast Sensitivity Test
-// 5-letter lines at decreasing contrast levels
-// Scoring: Need 4/5 correct to pass a line
+// CORRECT Pelli-Robson Contrast Sensitivity Test
+// Letters on WHITE background (not gray!)
+// Contrast levels from 100% (black) to 1.25% (very light gray)
 const contrastLevels = [
-  { contrast: 1.00, logCS: 0.00, label: "100%" },
-  { contrast: 0.50, logCS: 0.30, label: "50%" },
-  { contrast: 0.25, logCS: 0.60, label: "25%" },
-  { contrast: 0.10, logCS: 1.00, label: "10%" },
-  { contrast: 0.05, logCS: 1.30, label: "5%" },
-  { contrast: 0.025, logCS: 1.60, label: "2.5%" },
-  { contrast: 0.0125, logCS: 1.90, label: "1.25%" }
+  { contrast: 1.00, logCS: 0.00, label: "100%", percent: 100 },
+  { contrast: 0.50, logCS: 0.30, label: "50%", percent: 50 },
+  { contrast: 0.25, logCS: 0.60, label: "25%", percent: 25 },
+  { contrast: 0.10, logCS: 1.00, label: "10%", percent: 10 },
+  { contrast: 0.05, logCS: 1.30, label: "5%", percent: 5 },
+  { contrast: 0.025, logCS: 1.60, label: "2.5%", percent: 2.5 },
+  { contrast: 0.0125, logCS: 1.90, label: "1.25%", percent: 1.25 }
 ];
 
-// Sloan letters (clinical standard for contrast tests)
+// Sloan letters (Pelli-Robson standard)
 const sloanLetters = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'];
 
-// Generate random 5-letter sequence
+// Generate random 5-letter sequence (no repeats in same line)
 function generateLetterSequence() {
-    const sequence = [];
-    for (let i = 0; i < 5; i++) {
-        sequence.push(sloanLetters[Math.floor(Math.random() * sloanLetters.length)]);
-    }
-    return sequence;
+  const shuffled = [...sloanLetters].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 5);
 }
 
-// Calculate luminance for contrast level (Michelson contrast)
-function calculateContrastLuminance(contrastLevel) {
-    // Background: mid-gray at 50% luminance
-    const bgLuminance = 0.50;
-    
-    // Michelson contrast: (Lmax - Lmin) / (Lmax + Lmin) = contrast
-    // Solving for foreground luminance when background is Lmax
-    const fgLuminance = bgLuminance * (1 - contrastLevel) / (1 + contrastLevel);
-    
-    return {
-        bg: Math.round(bgLuminance * 255),
-        fg: Math.round(fgLuminance * 255)
-    };
+// Calculate letter color for contrast level
+// CORRECT: White background (255, 255, 255), vary letter darkness
+function calculateContrastColor(contrastPercent) {
+  // Background: WHITE
+  const bgR = 255, bgG = 255, bgB = 255;
+  
+  // Weber contrast (simpler for text on white):
+  // Contrast = (Background - Text) / Background
+  // Text luminance = Background × (1 - contrast)
+  const contrastValue = contrastPercent / 100;
+  const textValue = Math.round(255 * (1 - contrastValue));
+  
+  return {
+    bg: { r: bgR, g: bgG, b: bgB },
+    fg: { r: textValue, g: textValue, b: textValue }
+  };
 }
 
 // Contrast Sensitivity functionality
@@ -988,304 +983,350 @@ function initContrast() {
 
 // Initialize Contrast Test
 function initContrastTest() {
-    const container = document.getElementById('contrast-container');
-    if (!container) return;
+  const container = document.getElementById('contrast-container');
+  if (!container) return;
+  
+  if (!state.device.pxPerMM) {
+    container.innerHTML = '<div class="error" style="padding: 20px; background: #ffebee; border: 2px solid #f44336; border-radius: 5px; color: #c62828;"><strong>Please complete device setup first.</strong> Go to Device Setup section and select your device size.</div>';
+    return;
+  }
+  
+  // Pelli-Robson: 2.8° at 1m = 49mm height
+  // Letter x-height ≈ 35mm at 1m
+  const viewingDistanceCm = 100; // 1 meter (Pelli-Robson standard)
+  const xHeightMm = 35;
+  const letterSizePx = xHeightMm * state.device.pxPerMM * 1.4; // 1.4x for font size
+  
+  let chartHTML = `
+    <div class="contrast-instructions">
+      <h3>Contrast Sensitivity Test (Pelli-Robson Style)</h3>
+      <p><strong>Instructions:</strong></p>
+      <ul>
+        <li><strong>Viewing distance: 1 METER (100cm / 40 inches)</strong></li>
+        <li>Ensure screen is at <strong>maximum brightness</strong></li>
+        <li>View in <strong>bright lighting</strong> (not dim)</li>
+        <li>Read each line of <strong>5 letters</strong> from left to right</li>
+        <li>Type the letters you see (or your best guess)</li>
+        <li><strong>Passing score: 4 out of 5 letters correct</strong></li>
+        <li>Test stops when you fail a line (2+ errors)</li>
+      </ul>
+      <p class="warning" style="background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0;">⚠️ <strong>Important:</strong> Letters get lighter (lower contrast), not smaller</p>
+      <button id="start-contrast-test-btn" class="btn btn-primary btn-lg" style="min-height: 60px; font-size: 1.1rem; padding: 1rem 2rem; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Start Contrast Test</button>
+    </div>
     
-    if (!state.device.pxPerMM) {
-        container.innerHTML = '<div class="error" style="padding: 20px; background: #ffebee; border: 2px solid #f44336; border-radius: 5px; color: #c62828;"><strong>Please complete device setup first.</strong> Go to Device Setup section and select your device size.</div>';
-        return;
-    }
+    <div id="contrast-chart" class="contrast-chart" style="display: none;">
+  `;
+  
+  // Generate all contrast lines
+  const contrastLines = [];
+  contrastLevels.forEach((level, idx) => {
+    const letters = generateLetterSequence();
+    const colors = calculateContrastColor(level.percent);
     
-    // Letter size: 0.8M (approximately 20/160 Snellen)
-    const letterSize = calculateFontSizeFromM(0.8, state.device.pxPerMM);
-    
-    let chartHTML = `
-        <div class="contrast-instructions">
-            <h3>Contrast Sensitivity Test</h3>
-            <p><strong>Instructions:</strong></p>
-            <ul>
-                <li>View from <strong>1 meter (40 inches)</strong> distance</li>
-                <li>Read each line of 5 letters LEFT to RIGHT</li>
-                <li>Type the letters you see (use keyboard)</li>
-                <li>If unsure, make your best guess</li>
-                <li><strong>Passing score: 4 out of 5 letters correct</strong></li>
-            </ul>
-            <p>Lines get progressively lower in contrast (harder to see)</p>
-            <button id="start-contrast-test-btn" class="btn btn-primary btn-lg" style="min-height: 60px; font-size: 1.1rem; padding: 1rem 2rem; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Start Contrast Test</button>
-        </div>
-        
-        <div id="contrast-chart" class="contrast-chart" style="display: none;">
-    `;
-    
-    // Generate chart lines
-    const contrastLines = [];
-    contrastLevels.forEach((level, idx) => {
-        const letters = generateLetterSequence();
-        const colors = calculateContrastLuminance(level.contrast);
-        
-        contrastLines.push({
-            level: level,
-            letters: letters,
-            colors: colors
-        });
-        
-        chartHTML += `
-            <div class="contrast-line" data-index="${idx}">
-                <div class="contrast-line-label">
-                    <span class="contrast-value">${level.label}</span>
-                    <span class="log-cs">Log CS: ${level.logCS.toFixed(2)}</span>
-                </div>
-                <div class="contrast-letters" 
-                     style="background: rgb(${colors.bg},${colors.bg},${colors.bg}); 
-                            color: rgb(${colors.fg},${colors.fg},${colors.fg});
-                            font-size: ${letterSize}px;
-                            letter-spacing: ${letterSize * 0.4}px;
-                            font-family: 'Courier New', monospace;
-                            font-weight: bold;
-                            text-align: center;
-                            padding: 30px;
-                            border-radius: 8px;
-                            margin: 15px 0;">
-                    ${letters.join(' ')}
-                </div>
-                <div class="contrast-response">
-                    <input type="text" 
-                           class="contrast-input" 
-                           data-index="${idx}"
-                           maxlength="5" 
-                           placeholder="Type 5 letters"
-                           style="text-transform: uppercase; flex: 1; max-width: 200px; padding: 10px; font-size: 24px; text-align: center; font-family: monospace; font-weight: bold; letter-spacing: 8px; border: 2px solid #ddd; border-radius: 5px;" />
-                    <button class="btn-check-line" data-index="${idx}" style="min-width: 100px; padding: 10px 20px; font-size: 16px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Check</button>
-                    <span class="contrast-result" style="font-weight: bold; font-size: 16px; min-width: 150px; margin-left: 10px;"></span>
-                </div>
-            </div>
-        `;
+    contrastLines.push({
+      level: level,
+      letters: letters,
+      colors: colors
     });
     
     chartHTML += `
+      <div class="contrast-line" data-index="${idx}">
+        <div class="contrast-line-header" style="display: flex; gap: 20px; margin-bottom: 15px; font-weight: bold;">
+          <span class="contrast-label" style="color: #2196F3; font-size: 20px;">${level.label} Contrast</span>
+          <span class="log-cs-label" style="color: #666; font-size: 16px;">Log CS: ${level.logCS.toFixed(2)}</span>
         </div>
-        
-        <div id="contrast-results" style="display: none;">
-            <h3>Contrast Sensitivity Results</h3>
-            <div id="contrast-results-content"></div>
-            <button id="save-contrast-results-btn" class="btn btn-primary" style="min-height: 50px; font-size: 1rem; padding: 10px 30px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Save Results</button>
+        <div class="contrast-letters-box" 
+             style="background: rgb(${colors.bg.r}, ${colors.bg.g}, ${colors.bg.b});
+                    color: rgb(${colors.fg.r}, ${colors.fg.g}, ${colors.fg.b});
+                    font-size: ${letterSizePx}px;
+                    font-family: 'Courier New', monospace;
+                    font-weight: bold;
+                    padding: 40px;
+                    text-align: center;
+                    border: 2px solid #ccc;
+                    letter-spacing: ${letterSizePx * 0.5}px;
+                    border-radius: 8px;
+                    margin: 15px 0;">
+          ${letters.join(' ')}
         </div>
+        <div class="contrast-response" style="display: flex; gap: 15px; align-items: center; margin-top: 15px;">
+          <label>Type 5 letters:</label>
+          <input type="text" 
+                 class="contrast-input" 
+                 data-index="${idx}"
+                 maxlength="5" 
+                 placeholder="5 letters"
+                 style="text-transform: uppercase;
+                        font-size: 24px;
+                        width: 200px;
+                        padding: 10px;
+                        text-align: center;
+                        font-family: monospace;
+                        letter-spacing: 5px;
+                        border: 2px solid #ddd;
+                        border-radius: 5px;" />
+          <button class="btn-check-contrast" data-index="${idx}" style="min-width: 100px; padding: 10px 20px; font-size: 16px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Check Answer</button>
+          <span class="contrast-result" style="font-weight: bold; font-size: 16px; min-width: 150px;"></span>
+        </div>
+      </div>
     `;
+  });
+  
+  chartHTML += `
+      <div id="contrast-stop-message" style="display: none; padding: 20px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 5px; margin: 20px 0;">
+        <h3>Test Stopped</h3>
+        <p>You had 2 or more errors on this line.</p>
+        <p>Your contrast sensitivity result is the <strong>previous line</strong> you passed.</p>
+        <button id="finish-contrast-btn" class="btn btn-primary" style="min-height: 50px; font-size: 1rem; padding: 10px 30px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">View Results</button>
+      </div>
+    </div>
     
-    container.innerHTML = chartHTML;
-    
-    // Store line data
-    container.contrastLines = contrastLines;
-    
-    // Setup handlers
-    setupContrastTestHandlers(contrastLines);
+    <div id="contrast-results" style="display: none;">
+      <h3>Contrast Sensitivity Results</h3>
+      <div id="contrast-results-content"></div>
+      <button id="save-contrast-results-btn" class="btn btn-primary" style="min-height: 50px; font-size: 1rem; padding: 10px 30px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Save Results</button>
+    </div>
+  `;
+  
+  container.innerHTML = chartHTML;
+  
+  // Store line data
+  container.contrastLines = contrastLines;
+  
+  // Setup handlers
+  setupContrastTestHandlers(contrastLines);
 }
 
-// Contrast test handlers
+// Contrast test handlers with correct scoring
 function setupContrastTestHandlers(contrastLines) {
-    const startBtn = document.getElementById('start-contrast-test-btn');
-    const chartDiv = document.getElementById('contrast-chart');
+  const startBtn = document.getElementById('start-contrast-test-btn');
+  const chartDiv = document.getElementById('contrast-chart');
+  
+  let contrastResults = [];
+  let testStopped = false;
+  let bestContrastLevel = null;
+  
+  startBtn.addEventListener('click', function() {
+    document.querySelector('.contrast-instructions').style.display = 'none';
+    chartDiv.style.display = 'block';
     
-    if (!startBtn || !chartDiv) return;
-    
-    let contrastResults = [];
-    let bestContrastLevel = null;
-    
-    startBtn.addEventListener('click', function() {
-        document.querySelector('.contrast-instructions').style.display = 'none';
-        chartDiv.style.display = 'block';
-    });
-    
-    // Check buttons
-    document.querySelectorAll('.btn-check-line').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            const line = document.querySelector(`.contrast-line[data-index="${idx}"]`);
-            const input = line.querySelector('.contrast-input');
-            const resultSpan = line.querySelector('.contrast-result');
-            
-            const userAnswer = input.value.toUpperCase().replace(/\s/g, '');
-            const correctLetters = contrastLines[idx].letters;
-            
-            // Count correct letters
-            let correctCount = 0;
-            for (let i = 0; i < Math.min(userAnswer.length, correctLetters.length); i++) {
-                if (userAnswer[i] === correctLetters[i]) {
-                    correctCount++;
-                }
-            }
-            
-            const passed = correctCount >= 4; // Need 4/5 to pass
-            
-            // Store result
-            contrastResults[idx] = {
-                level: contrastLines[idx].level,
-                correctLetters: correctLetters.join(''),
-                userAnswer: userAnswer,
-                correctCount: correctCount,
-                passed: passed
-            };
-            
-            // Display result
-            resultSpan.textContent = `${correctCount}/5 correct - ${passed ? '✓ PASSED' : '✗ FAILED'}`;
-            resultSpan.className = `contrast-result ${passed ? 'passed' : 'failed'}`;
-            resultSpan.style.color = passed ? '#4CAF50' : '#f44336';
-            
-            // Disable input
-            input.disabled = true;
-            this.disabled = true;
-            
-            // Mark line
-            line.classList.add(passed ? 'line-passed' : 'line-failed');
-            line.style.borderColor = passed ? '#4CAF50' : '#f44336';
-            line.style.background = passed ? '#f0f8f0' : '#ffebee';
-            
-            // If failed (< 4/5 correct), previous line is the result
-            if (!passed && idx > 0) {
-                bestContrastLevel = contrastResults[idx - 1]?.level || contrastLines[0].level;
-                finishContrastTest(contrastResults, bestContrastLevel);
-            }
-            
-            // If completed all lines without failing
-            if (idx === contrastLines.length - 1 && passed) {
-                bestContrastLevel = contrastLines[idx].level;
-                finishContrastTest(contrastResults, bestContrastLevel);
-            }
-        });
-    });
-    
-    // Allow Enter key to submit
-    document.querySelectorAll('.contrast-input').forEach(input => {
-        input.addEventListener('input', function() {
-            this.value = this.value.toUpperCase();
-        });
+    // Focus first input
+    document.querySelector('.contrast-input[data-index="0"]').focus();
+  });
+  
+  // Check buttons
+  document.querySelectorAll('.btn-check-contrast').forEach(btn => {
+    btn.addEventListener('click', function() {
+      if (testStopped) return;
+      
+      const idx = parseInt(this.dataset.index);
+      const line = document.querySelector(`.contrast-line[data-index="${idx}"]`);
+      const input = line.querySelector('.contrast-input');
+      const resultSpan = line.querySelector('.contrast-result');
+      
+      const userAnswer = input.value.toUpperCase().trim().replace(/\s/g, '');
+      const correctLetters = contrastLines[idx].letters;
+      
+      if (userAnswer.length !== 5) {
+        alert('Please enter exactly 5 letters');
+        return;
+      }
+      
+      // Count correct letters
+      let correctCount = 0;
+      for (let i = 0; i < 5; i++) {
+        if (userAnswer[i] === correctLetters[i]) {
+          correctCount++;
+        }
+      }
+      
+      const passed = correctCount >= 4; // Need 4/5 to pass
+      const errorCount = 5 - correctCount;
+      
+      // Store result
+      contrastResults[idx] = {
+        level: contrastLines[idx].level,
+        correctLetters: correctLetters.join(''),
+        userAnswer: userAnswer,
+        correctCount: correctCount,
+        errorCount: errorCount,
+        passed: passed
+      };
+      
+      // Display result
+      resultSpan.innerHTML = `<strong>${correctCount}/5 correct</strong> - ${passed ? '✓ PASSED' : '✗ FAILED'}`;
+      resultSpan.className = `contrast-result ${passed ? 'result-pass' : 'result-fail'}`;
+      resultSpan.style.color = passed ? '#4CAF50' : '#f44336';
+      
+      // Disable input and button
+      input.disabled = true;
+      this.disabled = true;
+      line.classList.add(passed ? 'line-passed' : 'line-failed');
+      
+      // If FAILED (2+ errors), STOP test - previous line is result
+      if (!passed) {
+        testStopped = true;
         
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const idx = parseInt(this.dataset.index);
-                document.querySelector(`.btn-check-line[data-index="${idx}"]`).click();
-            }
-        });
+        // Best contrast is the previous line (last one passed)
+        if (idx > 0) {
+          bestContrastLevel = contrastResults[idx - 1]?.level || contrastLines[0].level;
+        } else {
+          // Failed first line - no measurable CS
+          bestContrastLevel = { contrast: 0, logCS: 0, label: "0%", percent: 0 };
+        }
+        
+        // Hide remaining lines
+        for (let i = idx + 1; i < contrastLines.length; i++) {
+          document.querySelector(`.contrast-line[data-index="${i}"]`).style.display = 'none';
+        }
+        
+        // Show stop message
+        document.getElementById('contrast-stop-message').style.display = 'block';
+        
+      } else if (idx === contrastLines.length - 1) {
+        // Passed all lines!
+        bestContrastLevel = contrastLines[idx].level;
+        testStopped = true;
+        finishContrastTest(contrastResults, bestContrastLevel);
+      } else {
+        // Focus next input
+        const nextInput = document.querySelector(`.contrast-input[data-index="${idx + 1}"]`);
+        if (nextInput) nextInput.focus();
+      }
     });
+  });
+  
+  // Enter key to submit
+  document.querySelectorAll('.contrast-input').forEach(input => {
+    input.addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+    });
+    
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const idx = parseInt(this.dataset.index);
+        document.querySelector(`.btn-check-contrast[data-index="${idx}"]`).click();
+      }
+    });
+  });
+  
+  // Finish button (when test stopped early)
+  const finishBtn = document.getElementById('finish-contrast-btn');
+  if (finishBtn) {
+    finishBtn.addEventListener('click', function() {
+      finishContrastTest(contrastResults, bestContrastLevel);
+    });
+  }
 }
 
-// Finish contrast test and calculate results
+// Display results with correct interpretation
 function finishContrastTest(results, bestLevel) {
-    const resultsContent = document.getElementById('contrast-results-content');
-    const chartDiv = document.getElementById('contrast-chart');
-    
-    if (!resultsContent || !chartDiv) return;
-    
-    // Interpret results (Pelli-Robson normal: 1.5-2.0 log CS)
-    let interpretation = '';
-    if (bestLevel.logCS >= 1.50) {
-        interpretation = 'Normal contrast sensitivity';
-    } else if (bestLevel.logCS >= 1.00) {
-        interpretation = 'Mild reduction in contrast sensitivity';
-    } else if (bestLevel.logCS >= 0.60) {
-        interpretation = 'Moderate reduction - recommend professional evaluation';
-    } else {
-        interpretation = 'Significant reduction - recommend comprehensive eye exam';
-    }
-    
-    resultsContent.innerHTML = `
-        <div class="result-summary">
-            <h4>Contrast Sensitivity Score</h4>
-            <p class="result-value" style="font-size: 32px; font-weight: bold; color: #4CAF50; margin: 10px 0;">${bestLevel.label} (Log CS: ${bestLevel.logCS.toFixed(2)})</p>
-            <p class="result-description" style="color: #666; font-style: italic; margin-bottom: 30px;">${interpretation}</p>
-            
-            <p class="reference-note" style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; margin: 20px 0;"><strong>Reference:</strong> Normal contrast sensitivity is 1.5-2.0 log CS (Pelli-Robson)</p>
-            
-            <h4>Line-by-Line Results</h4>
-            <table class="results-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                <thead>
-                    <tr>
-                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Contrast</th>
-                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Log CS</th>
-                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Correct Letters</th>
-                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Your Answer</th>
-                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Score</th>
-                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Result</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${results.filter(r => r).map(r => `
-                        <tr class="${r.level.contrast === bestLevel.contrast ? 'highlight-result' : ''}" style="${r.level.contrast === bestLevel.contrast ? 'background: #fff9c4 !important; font-weight: bold;' : ''}">
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${r.level.label}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${r.level.logCS.toFixed(2)}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;"><strong>${r.correctLetters}</strong></td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${r.userAnswer}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${r.correctCount}/5</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;"><span style="background: ${r.passed ? '#4CAF50' : '#f44336'}; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">${r.passed ? 'PASS' : 'FAIL'}</span></td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    chartDiv.style.display = 'none';
-    document.getElementById('contrast-results').style.display = 'block';
-    
-    // Store results
-    state.results.contrast = {
-        bestContrast: bestLevel.label,
-        logCS: bestLevel.logCS,
-        interpretation: interpretation,
-        detailedResults: results.filter(r => r)
-    };
-    
-    document.getElementById('save-contrast-results-btn').addEventListener('click', function() {
-        alert('Contrast test results saved!');
-    });
+  const resultsContent = document.getElementById('contrast-results-content');
+  
+  // Interpret results (Pelli-Robson normal: 1.5-2.0 log CS)
+  let interpretation;
+  let recommendation;
+  
+  if (bestLevel.logCS === 0) {
+    interpretation = 'Unable to measure - failed first line';
+    recommendation = 'Immediate professional evaluation recommended';
+  } else if (bestLevel.logCS >= 1.50) {
+    interpretation = 'Normal contrast sensitivity';
+    recommendation = 'No concerns detected in this screening';
+  } else if (bestLevel.logCS >= 1.00) {
+    interpretation = 'Mild reduction in contrast sensitivity';
+    recommendation = 'Consider professional evaluation if experiencing vision difficulties';
+  } else if (bestLevel.logCS >= 0.60) {
+    interpretation = 'Moderate reduction in contrast sensitivity';
+    recommendation = 'Professional eye examination recommended';
+  } else {
+    interpretation = 'Significant reduction in contrast sensitivity';
+    recommendation = 'Comprehensive eye exam strongly recommended';
+  }
+  
+  resultsContent.innerHTML = `
+    <div class="result-summary-box">
+      <h4>Your Contrast Sensitivity Result</h4>
+      <div class="result-main">
+        <p class="result-value-large" style="font-size: 32px; font-weight: bold; color: #4CAF50; margin: 10px 0;">${bestLevel.label}</p>
+        <p class="result-logcs" style="font-size: 20px; color: #666; margin-bottom: 20px;">Log CS: ${bestLevel.logCS.toFixed(2)}</p>
+      </div>
+      
+      <div class="result-interpretation" style="background: #e8f4f8; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3; margin: 20px 0;">
+        <h5>Interpretation:</h5>
+        <p><strong>${interpretation}</strong></p>
+        <p>${recommendation}</p>
+      </div>
+      
+      <div class="result-reference" style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Reference Values (Pelli-Robson):</strong></p>
+        <ul>
+          <li><strong>Normal:</strong> 1.5 - 2.0 log CS (5% to 1.25% contrast)</li>
+          <li><strong>Mild impairment:</strong> 1.0 - 1.5 log CS (10% to 5% contrast)</li>
+          <li><strong>Moderate impairment:</strong> 0.6 - 1.0 log CS (25% to 10% contrast)</li>
+          <li><strong>Severe impairment:</strong> < 0.6 log CS (> 25% contrast)</li>
+        </ul>
+      </div>
+      
+      <h4>Line-by-Line Results</h4>
+      <table class="results-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+          <tr>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Contrast</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Log CS</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Correct Letters</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Your Answer</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Score</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center; background: #f5f5f5; font-weight: bold;">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${results.filter(r => r).map((r, idx) => `
+            <tr class="${r.level.contrast === bestLevel.contrast ? 'highlight-best' : ''} ${r.passed ? '' : 'failed-line'}" style="${r.level.contrast === bestLevel.contrast ? 'background: #fff9c4 !important; font-weight: bold;' : ''}">
+              <td style="padding: 10px; border: 1px solid #ddd; text-align: center;"><strong>${r.level.label}</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${r.level.logCS.toFixed(2)}</td>
+              <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-family: monospace; font-weight: bold;">${r.correctLetters}</td>
+              <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-family: monospace;">${r.userAnswer}</td>
+              <td style="padding: 10px; border: 1px solid #ddd; text-align: center;"><strong>${r.correctCount}/5</strong> (${r.errorCount} errors)</td>
+              <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+                <span style="background: ${r.passed ? '#4CAF50' : '#f44336'}; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold;">
+                  ${r.passed ? 'PASS' : 'FAIL'}
+                </span>
+                ${!r.passed ? '<br><small>(Test stopped here)</small>' : ''}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      
+      <div class="test-conditions" style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Test Conditions:</strong></p>
+        <ul>
+          <li>Viewing distance: 1 meter (100cm)</li>
+          <li>Device: ${state.device.diagonal}" screen</li>
+          <li>Background: White (clinical standard)</li>
+          <li>Letter size: 2.8° (Pelli-Robson standard)</li>
+        </ul>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('contrast-chart').style.display = 'none';
+  document.getElementById('contrast-results').style.display = 'block';
+  
+  // Store results
+  state.results.contrast = {
+    bestContrast: bestLevel.label,
+    logCS: bestLevel.logCS,
+    interpretation: interpretation,
+    recommendation: recommendation,
+    detailedResults: results.filter(r => r)
+  };
+  
+  document.getElementById('save-contrast-results-btn').addEventListener('click', function() {
+    alert('Contrast test results saved!');
+  });
 }
 
-// Depth Perception - Titmus-style concept
-function initDepth() {
-    setupDepthDemo();
-}
-
-function setupDepthDemo() {
-    const canvas = document.getElementById('depth-canvas');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-
-    // Clear canvas
-    ctx.fillStyle = '#f9f9f9';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const groups = [
-        { x: 60, y: 100, label: 1 },
-        { x: 150, y: 90, label: 2 },
-        { x: 240, y: 80, label: 3 } // slightly higher / with shadow to appear "closer"
-    ];
-
-    groups.forEach((g, idx) => {
-        ctx.save();
-        ctx.translate(g.x, g.y);
-        
-        // Give group 3 a shadow to look "closer" (monocular depth cue)
-        if (g.label === 3) {
-            ctx.shadowColor = "rgba(0,0,0,0.3)";
-            ctx.shadowBlur = 8;
-            ctx.shadowOffsetY = 4;
-        }
-        
-        // Draw 4 circles in each group
-        for (let i = 0; i < 4; i++) {
-            ctx.beginPath();
-            ctx.arc((i - 1.5) * 15, 0, 6, 0, Math.PI * 2);
-            ctx.fillStyle = "#4a6fa5";
-            ctx.fill();
-        }
-        ctx.restore();
-
-        // Draw label
-        ctx.fillStyle = "#000";
-        ctx.font = "12px Arial";
-        ctx.fillText(g.label.toString(), g.x - 3, g.y + 30);
-    });
-}
 
 
