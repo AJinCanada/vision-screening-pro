@@ -1055,31 +1055,50 @@ function initContrastTest() {
           </ul>
         </div>
         
-        <div class="etdrs-chart" style="background: ${bgColor}; padding: 40px; border: 2px solid #ccc; margin: 20px auto; max-width: 900px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div class="etdrs-chart-container" style="background: ${bgColor}; padding: 30px 20px; border: 2px solid #ccc; margin: 20px auto; max-width: 95%; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto;">
     `;
     
-    // Generate all ETDRS lines
+    // Generate all ETDRS lines with CORRECT ETDRS spacing standard
     etdrsLineSizes.forEach((lineSize, idx) => {
       const letters = lineLetters[idx];
       const fontSize = calculateFontSizeFromM(lineSize.mValue, state.device.pxPerMM, 40);
       
-      // Calculate letter spacing (proportional to size)
-      const letterSpacing = fontSize * 0.5;
+      // ETDRS STANDARD: Letter spacing = 1 letter-width
+      // Sloan letters are SQUARE (height = width), so spacing = fontSize
+      // CSS letter-spacing adds EXTRA space between letters
+      // For ETDRS standard (1 letter-width between), use fontSize
+      let letterSpacing = fontSize; // ETDRS standard: 1 letter-width
+      
+      // Calculate total width needed: 5 letters + 4 spacings + labels
+      const screenWidth = window.innerWidth || 1200;
+      const availableWidth = screenWidth * 0.7; // Use 70% of screen width for letters
+      const totalLineWidth = (fontSize * 5) + (letterSpacing * 4) + 200; // +200 for labels
+      
+      // If line too wide for screen, scale down spacing proportionally
+      // But maintain ETDRS standard as much as possible
+      if (totalLineWidth > availableWidth && fontSize > 20) {
+        const scaleFactor = (availableWidth - 200) / ((fontSize * 5) + (letterSpacing * 4));
+        letterSpacing = letterSpacing * scaleFactor * 0.9; // Slight reduction for safety
+      }
       
       chartHTML += `
-        <div class="etdrs-line" data-line="${idx + 1}" style="display: grid; grid-template-columns: 50px 1fr 100px; align-items: center; gap: 15px; margin: 8px 0; padding: 5px 20px;">
-          <div class="line-label" style="font-size: 16px; font-weight: bold; color: #666; text-align: right;">${idx + 1}</div>
-          <div class="line-letters" 
-               style="color: ${fgColor};
+        <div class="etdrs-line" data-line="${idx + 1}" style="display: flex; align-items: center; justify-content: center; gap: 20px; margin: 5px 0; min-height: ${Math.max(30, fontSize * 1.2)}px; white-space: nowrap;">
+          <div class="line-number-label" style="min-width: 40px; text-align: right; font-size: 14px; font-weight: bold; color: #666; flex-shrink: 0;">${idx + 1}</div>
+          <div class="line-letters-container" 
+               style="display: inline-block;
+                      color: rgb(${fgColor.r}, ${fgColor.g}, ${fgColor.b});
                       font-size: ${fontSize}px;
                       font-family: 'Courier New', monospace;
                       font-weight: bold;
                       letter-spacing: ${letterSpacing}px;
+                      white-space: nowrap;
                       text-align: center;
-                      padding: ${fontSize * 0.3}px 0;">
-            ${letters.join(' ')}
+                      padding: ${fontSize * 0.15}px 0;
+                      flex-grow: 0;
+                      flex-shrink: 1;">
+            ${letters.join('')}
           </div>
-          <div class="line-snellen" style="font-size: 14px; color: #666; text-align: left;">${lineSize.snellen}</div>
+          <div class="line-snellen-label" style="min-width: 80px; text-align: left; font-size: 14px; color: #666; flex-shrink: 0;">${lineSize.snellen}</div>
         </div>
       `;
     });

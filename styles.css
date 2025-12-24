@@ -569,6 +569,45 @@ header h1 {
     margin-bottom: 30px;
 }
 
+/* ETDRS Contrast Chart Styles - Clinical Standard Spacing */
+.etdrs-chart-container {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.etdrs-line {
+    white-space: nowrap; /* Prevent line wrapping */
+}
+
+.line-number-label {
+    flex-shrink: 0;
+}
+
+.line-letters-container {
+    flex-shrink: 1; /* Allow shrinking if needed for very large letters */
+}
+
+.line-snellen-label {
+    flex-shrink: 0;
+}
+
+/* For mobile/small screens - adjust ETDRS layout */
+@media (max-width: 768px) {
+    .etdrs-chart-container {
+        padding: 20px 10px;
+    }
+    
+    .line-number-label,
+    .line-snellen-label {
+        min-width: 30px;
+        font-size: 12px;
+    }
+    
+    .etdrs-line {
+        gap: 10px;
+    }
+}
+
 /* Contrast Chart Styles */
 .contrast-chart {
     max-width: 1000px;
@@ -678,9 +717,9 @@ header h1 {
     
     .nav-bar {
         flex-direction: column;
-    }
-    
-    .nav-btn {
+}
+
+.nav-btn {
         width: 100%;
     }
     
