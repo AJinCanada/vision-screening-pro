@@ -287,6 +287,28 @@ function initDeviceSetup() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded - Initializing...');
     
+    // Initialize PWA features
+    if (typeof brightnessManager !== 'undefined') {
+        // Request wake lock when app starts
+        brightnessManager.keepAwake().then(active => {
+            if (active) {
+                const indicator = document.getElementById('wake-lock-indicator');
+                if (indicator) {
+                    indicator.style.display = 'flex';
+                    indicator.classList.remove('inactive');
+                }
+            }
+        });
+    }
+    
+    // Check if running as PWA
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                  window.navigator.standalone === true;
+    if (isPWA) {
+        document.body.classList.add('pwa-mode');
+        console.log('Running as PWA');
+    }
+    
     // Initialize device setup - try multiple times if needed
     try {
         initDeviceSetup();
@@ -1056,6 +1078,7 @@ function initContrast() {
 }
 
 // Initialize Contrast Test (ETDRS Style)
+// Initialize Contrast Test (ETDRS Style)
 function initContrastTest() {
   const container = document.getElementById('contrast-container');
   if (!container) return;
@@ -1322,6 +1345,88 @@ function initContrastTest() {
 }
 
 // Old handlers removed - new page-based flow is in initContrastTest
+
+// ============================================
+// PWA FEATURES INTEGRATION
+// ============================================
+
+// Wrap contrast test with adaptation option
+const originalInitContrastTest = initContrastTest;
+window.initContrastTest = async function() {
+  // Check brightness before test
+  if (typeof brightnessManager !== 'undefined') {
+    const brightness = await brightnessManager.detectBrightness();
+    const alert = brightnessManager.showBrightnessAlert();
+    
+    if (alert.needsAdjustment) {
+      const proceed = confirm(
+        `⚠️ Screen Brightness Alert\n\n` +
+        `${alert.message}\n\n` +
+        `Would you like to proceed anyway?\n\n` +
+        `(Recommended: Increase brightness to 80-100% for best results)`
+      );
+      if (!proceed) return;
+    }
+  }
+  
+  // Ask if user wants dark adaptation
+  if (typeof adaptationManager !== 'undefined') {
+    const wantsAdaptation = confirm(
+      '🌙 Dark Adaptation Phase\n\n' +
+      'Dark adaptation is recommended for contrast sensitivity testing.\n\n' +
+      'This will display a 30-second countdown to allow your eyes to adapt to the testing conditions.\n\n' +
+      'Run adaptation? (Recommended: Yes)'
+    );
+    
+    if (wantsAdaptation) {
+      const container = document.getElementById('contrast-container');
+      if (container) {
+        await adaptationManager.startAdaptation(container);
+      }
+    }
+  }
+  
+  // Run original contrast test
+  originalInitContrastTest();
+};
+
+// Add device testing option to device setup
+function addDeviceTestingOption() {
+  const deviceSetup = document.getElementById('device-setup');
+  if (!deviceSetup) return;
+  
+  const content = deviceSetup.querySelector('.content');
+  if (!content) return;
+  
+  // Check if test button already exists
+  if (document.getElementById('run-device-test-btn')) return;
+  
+  // Add test button before device selection
+  const testBtn = document.createElement('button');
+  testBtn.id = 'run-device-test-btn';
+  testBtn.className = 'btn btn-secondary btn-lg';
+  testBtn.style.cssText = 'min-height: 50px; font-size: 1rem; padding: 10px 30px; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;';
+  testBtn.textContent = '🔍 Run Device Compatibility Test';
+  testBtn.addEventListener('click', () => {
+    if (typeof deviceTester !== 'undefined') {
+      deviceTester.runAllTests();
+    } else {
+      alert('Device tester not loaded. Please refresh the page.');
+    }
+  });
+  
+  const deviceSelection = content.querySelector('.device-selection');
+  if (deviceSelection && deviceSelection.parentNode) {
+    deviceSelection.parentNode.insertBefore(testBtn, deviceSelection);
+  }
+}
+
+// Initialize device testing option when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', addDeviceTestingOption);
+} else {
+  addDeviceTestingOption();
+}
 
 
 

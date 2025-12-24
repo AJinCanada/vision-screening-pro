@@ -14,11 +14,24 @@
     <meta property="og:url" content="https://ajincanada.github.io/vision-screening-pro/">
     
     <!-- Mobile app capabilities -->
-    <meta name="theme-color" content="#4CAF50">
+    <meta name="theme-color" content="#2196F3">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Vision Test">
+    <meta name="apple-mobile-web-app-title" content="Vision Pro">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="icon-152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icon-167.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
     
     <title>Vision Screening Pro - Free Online Eye Tests</title>
     
@@ -159,8 +172,86 @@
         </section>
 
                 </div>
+    
+    <!-- Wake Lock Indicator -->
+    <div id="wake-lock-indicator" class="wake-lock-indicator" style="display: none;">
+        <span class="wake-lock-icon">🔒</span>
+        <span>Screen Awake</span>
+    </div>
+    
+    <!-- PWA Install Banner -->
+    <div id="install-banner" class="install-banner" style="display: none;">
+        <div class="install-content">
+            <strong>📲 Install Vision Screening Pro</strong>
+            <p>Add to your home screen for easy access and offline use</p>
+        </div>
+        <div class="install-actions">
+            <button id="install-btn" class="btn btn-primary btn-sm">Install</button>
+            <button id="install-dismiss" class="btn btn-secondary btn-sm">Later</button>
+        </div>
+    </div>
                 
+    <!-- Scripts -->
+    <script src="brightness-control.js"></script>
+    <script src="adaptation.js"></script>
+    <script src="device-test.js"></script>
+    <script src="speech-recognition.js"></script>
     <script src="script.js"></script>
+    
+    <!-- PWA Registration -->
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/vision-screening-pro/service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+        
+        // PWA Install prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show custom install banner
+            const banner = document.getElementById('install-banner');
+            if (banner) {
+                banner.style.display = 'flex';
+                
+                const installBtn = document.getElementById('install-btn');
+                const dismissBtn = document.getElementById('install-dismiss');
+                
+                if (installBtn) {
+                    installBtn.addEventListener('click', async () => {
+                        banner.style.display = 'none';
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`User response: ${outcome}`);
+                        deferredPrompt = null;
+                    });
+                }
+                
+                if (dismissBtn) {
+                    dismissBtn.addEventListener('click', () => {
+                        banner.style.display = 'none';
+                    });
+                }
+            }
+        });
+        
+        // Log if app is installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            deferredPrompt = null;
+        });
+    </script>
     
     <!-- Browser detection and orientation check -->
     <script>
