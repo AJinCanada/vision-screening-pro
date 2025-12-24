@@ -414,29 +414,44 @@ function initReadingTest() {
             <button id="start-reading-test-btn" class="btn btn-primary btn-lg" style="min-height: 60px; font-size: 1.1rem; padding: 1rem 2rem; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Start Reading Test</button>
         </div>
         
-        <div id="reading-chart" class="reading-chart" style="display: none;">
+        <div id="reading-chart" class="reading-chart-container" style="display: none;">
     `;
     
     // Display all sentences from largest (8M) to smallest (0.4M)
     readingMValues.forEach((level, idx) => {
         const sentence = mnreadSentences[idx % mnreadSentences.length];
         const fontSize = calculateFontSizeFromM(level.m, state.device.pxPerMM);
+        const lineNumber = idx + 1;
         
         chartHTML += `
-            <div class="reading-line" data-index="${idx}" data-m="${level.m}">
-                <div class="reading-line-label">
-                    <span class="m-value">${level.m}M</span>
-                    <span class="snellen-value">${level.snellen}</span>
-                </div>
-                <div class="reading-sentence" style="font-size: ${fontSize}px; line-height: 1.3;">
+            <div class="reading-line" data-index="${idx}" data-m="${level.m}" data-line="${lineNumber}">
+                <!-- LEFT: Line number -->
+                <div class="line-number-label">${lineNumber}</div>
+                
+                <!-- CENTER: Sentence text -->
+                <div class="sentence-text" 
+                     style="font-size: ${fontSize}px;
+                            font-family: 'Times New Roman', Times, serif;
+                            color: #000;
+                            line-height: 1.3;
+                            text-align: left;
+                            padding: 5px 10px;">
                     ${sentence}
                 </div>
-                <div class="reading-controls">
-                    <button class="btn-start-line" data-index="${idx}" style="min-width: 100px; padding: 8px 15px; font-size: 14px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">▶ Start</button>
-                    <button class="btn-stop-line" data-index="${idx}" style="display:none; min-width: 100px; padding: 8px 15px; font-size: 14px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">⏹ Stop</button>
-                    <span class="reading-time" style="font-weight: bold; color: #4CAF50; min-width: 150px; margin: 0 10px;"></span>
-                    <input type="number" class="reading-errors" placeholder="Errors" min="0" max="10" style="width: 80px; padding: 5px; text-align: center; border: 1px solid #ddd; border-radius: 3px;" />
+                
+                <!-- RIGHT: Snellen + M-value -->
+                <div class="line-labels-right">
+                    <span class="line-snellen-label">${level.snellen}</span>
+                    <span class="line-m-value-label">${level.m}M</span>
                 </div>
+            </div>
+            
+            <!-- Reading controls below each line -->
+            <div class="reading-controls" style="display: flex; gap: 10px; align-items: center; margin: 5px 0 15px 0; padding-left: 45px;">
+                <button class="btn-start-line" data-index="${idx}" style="min-width: 100px; padding: 8px 15px; font-size: 14px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">▶ Start</button>
+                <button class="btn-stop-line" data-index="${idx}" style="display:none; min-width: 100px; padding: 8px 15px; font-size: 14px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">⏹ Stop</button>
+                <span class="reading-time" style="font-weight: bold; color: #4CAF50; min-width: 150px; margin: 0 10px;"></span>
+                <input type="number" class="reading-errors" placeholder="Errors" min="0" max="10" style="width: 80px; padding: 5px; text-align: center; border: 1px solid #ddd; border-radius: 3px;" />
             </div>
         `;
     });
@@ -1069,8 +1084,8 @@ function initContrastTest() {
       // Standard ETDRS: spacing = fontSize (1 letter-width)
       // Adjust for screen width
       const screenWidth = window.innerWidth;
-      const labelWidth = 100; // Combined width of line number + snellen labels
-      const availableWidth = screenWidth - labelWidth - 40; // -40 for padding/margins
+      const labelWidth = 130; // Line number (35px) + Right labels (90px) + gaps
+      const availableWidth = screenWidth - labelWidth - 30; // -30 for padding/margins
       
       // Total width needed: 5 letters + 4 spaces between
       const standardSpacing = fontSize * 0.95; // ETDRS standard (close to 1 letter-width)
@@ -1085,7 +1100,10 @@ function initContrastTest() {
       
       chartHTML += `
         <div class="etdrs-line" data-line="${idx + 1}">
+          <!-- LEFT: Line number -->
           <div class="line-number-label">${idx + 1}</div>
+          
+          <!-- CENTER: Letters -->
           <div class="line-letters-container" 
                style="color: rgb(${fgColor.r}, ${fgColor.g}, ${fgColor.b});
                       font-size: ${fontSize}px;
@@ -1095,7 +1113,12 @@ function initContrastTest() {
                       white-space: nowrap;">
             ${letters.join('')}
           </div>
-          <div class="line-snellen-label">${lineSize.snellen}</div>
+          
+          <!-- RIGHT: Snellen + M-value -->
+          <div class="line-labels-right">
+            <span class="line-snellen-label">${lineSize.snellen}</span>
+            <span class="line-m-value-label">${lineSize.mValue}M</span>
+          </div>
         </div>
       `;
     });
@@ -1108,7 +1131,7 @@ function initContrastTest() {
           <select id="smallest-line" class="line-select">
             <option value="">-- Select line number --</option>
             ${etdrsLineSizes.map((line, idx) => `
-              <option value="${idx + 1}">Line ${idx + 1} - ${line.snellen}</option>
+              <option value="${idx + 1}">Line ${idx + 1} - ${line.snellen} (${line.mValue}M)</option>
             `).join('')}
             <option value="0">Cannot read any line clearly</option>
           </select>
