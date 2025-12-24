@@ -13,53 +13,68 @@ const state = {
     }
 };
 
-// MNREAD-Style Reading Chart - M-values from 8M to 0.4M
-// Standard MNREAD: each sentence has 10 words, viewed at 40cm
+// CORRECT Lighthouse International Continuous Text Cards M-values
+// At 40cm (16 inches) viewing distance: M = Snellen_denominator / 50
+// Source: Lighthouse International "Continuous Text" Cards for Near Vision
 const readingMValues = [
-  { m: 8.0, snellen: "20/1600" },
-  { m: 6.3, snellen: "20/1250" },
-  { m: 5.0, snellen: "20/1000" },
-  { m: 4.0, snellen: "20/800" },
-  { m: 3.2, snellen: "20/640" },
-  { m: 2.5, snellen: "20/500" },
-  { m: 2.0, snellen: "20/400" },
-  { m: 1.6, snellen: "20/320" },
-  { m: 1.25, snellen: "20/250" },
-  { m: 1.0, snellen: "20/200" },
-  { m: 0.8, snellen: "20/160" },
-  { m: 0.63, snellen: "20/125" },
-  { m: 0.5, snellen: "20/100" },
-  { m: 0.4, snellen: "20/80" }
+  { m: 8.0, snellen: "20/400" },   // Largest
+  { m: 6.3, snellen: "20/320" },
+  { m: 5.0, snellen: "20/250" },
+  { m: 4.0, snellen: "20/200" },
+  { m: 3.2, snellen: "20/160" },
+  { m: 2.5, snellen: "20/125" },
+  { m: 2.0, snellen: "20/100" },
+  { m: 1.6, snellen: "20/80" },
+  { m: 1.25, snellen: "20/63" },   // Sometimes shown as 1.3M
+  { m: 1.0, snellen: "20/50" },
+  { m: 0.8, snellen: "20/40" },
+  { m: 0.6, snellen: "20/32" },    // Sometimes shown as 0.63M
+  { m: 0.5, snellen: "20/25" },
+  { m: 0.4, snellen: "20/20" }      // Smallest - 20/20 vision ✓
 ];
 
-// Sentences - exactly 10 standard-length words each (MNREAD standard)
+// Simple, child-appropriate sentences for Lighthouse-style reading chart
+// Each sentence approximately same character length, one complete sentence per line
 const mnreadSentences = [
-  "The cat sat on the mat and looked at birds.",
-  "My dog likes to play with a red ball outside.",
-  "We went to the park and saw many pretty flowers.",
+  "The cat sat on the mat and looked at the bird.",
+  "My dog likes to play with a red ball in the yard.",
+  "We went to the park and saw many flowers there.",
   "The sun is bright and warm on a summer day.",
-  "I like to read books about animals and wild nature.",
-  "Mom made cookies for us to eat after school today.",
+  "I like to read books about animals and nature.",
+  "Mom made cookies for us to eat after school.",
   "The fish swim in the blue water of the lake.",
   "My friend has a bike that is green and fast.",
   "We can see stars in the sky at night time.",
   "The tree has leaves that turn red in the fall.",
   "I help my dad wash the car on the weekends.",
-  "The bird sings a song early in the morning hours.",
-  "My sister likes to draw pictures with her bright crayons.",
-  "We eat lunch at school with all of our best friends."
+  "The bird sings a song early in the morning.",
+  "My sister likes to draw pictures with crayons.",
+  "We eat lunch at school with all our friends."
 ];
 
-// Calculate font size in pixels from M-value
+// CORRECT M-to-Snellen conversion function
+function mToSnellen(mValue) {
+  // At 40cm: M = Snellen_denominator / 50
+  const snellenDenom = Math.round(mValue * 50);
+  return `20/${snellenDenom}`;
+}
+
+// CORRECT Snellen-to-M conversion
+function snellenToM(snellenDenom) {
+  // M = denominator / 50 at 40cm
+  return snellenDenom / 50;
+}
+
+// Calculate font size from M-value (CORRECT formula)
+// Lighthouse standard: At 40cm, 1M = 1.454mm x-height
 function calculateFontSizeFromM(mValue, pxPerMM, viewingDistanceCm = 40) {
-  // M-value definition: M = 1 when x-height subtends 5 arc minutes at stated distance
-  // At 40cm, 1M = 1.45mm x-height
-  // M-value scales proportionally: 2M is twice the size
+  // Lighthouse standard: At 40cm, 1M = 1.454mm x-height
+  const xHeightMm = mValue * 1.454;
   
-  const xHeightMm = mValue * 1.45; // x-height in mm at 40cm
+  // Convert to pixels
   const xHeightPx = xHeightMm * pxPerMM;
   
-  // Font size is approximately 1.4x the x-height (typical for sans-serif fonts)
+  // Font size is approximately 1.4x the x-height
   return xHeightPx * 1.4;
 }
 
@@ -375,12 +390,16 @@ function initReadingTest() {
     // Create full chart display
     let chartHTML = `
         <div class="reading-instructions">
-            <h3>Reading Speed Test (MNREAD-Style)</h3>
+            <h3>Near Vision Reading Test (Lighthouse International Style)</h3>
+            <p style="background: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <strong>Standard Viewing Distance: 40cm (16 inches)</strong><br>
+                Hold your device at this distance for accurate results.
+            </p>
             <p><strong>Instructions:</strong></p>
             <ul>
                 <li>Hold device at <strong>40cm (16 inches)</strong> viewing distance</li>
-                <li>Sit in good lighting</li>
-                <li>Start from the TOP (largest text) and read DOWN</li>
+                <li>Sit in good lighting (6500K, CRI >90 recommended)</li>
+                <li>Start from the TOP (largest text, 8.0M) and read DOWN to smallest (0.4M)</li>
                 <li>Read each line out loud as quickly and accurately as possible</li>
                 <li>${hasMic ? 'Allow microphone access to record reading speed' : 'Manual timing will be used'}</li>
             </ul>
@@ -390,6 +409,9 @@ function initReadingTest() {
                 <li><strong>Threshold Print Size (TPS):</strong> Smallest size you can read (even slowly)</li>
                 <li><strong>Maximum Reading Speed:</strong> Your fastest reading speed in words per minute</li>
             </ul>
+            <p style="font-size: 0.9em; color: #666; margin-top: 15px;">
+                <em>This is an educational screening test based on Lighthouse International methodology, not an official clinical test.</em>
+            </p>
             <button id="start-reading-test-btn" class="btn btn-primary btn-lg" style="min-height: 60px; font-size: 1.1rem; padding: 1rem 2rem; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Start Reading Test</button>
         </div>
         
@@ -498,8 +520,13 @@ function setupReadingTestHandlers() {
             const errorsInput = line.querySelector('.reading-errors');
             const errors = parseInt(errorsInput.value) || 0;
             
-            // Calculate WPM: 60 × (10 - errors) / reading_time
-            const wpm = Math.round(60 * (10 - errors) / readingTimeSeconds);
+            // Get the sentence and count words
+            const sentence = mnreadSentences[idx % mnreadSentences.length];
+            const wordCount = sentence.split(/\s+/).length;
+            
+            // Calculate WPM: 60 × (words_in_sentence - errors) / time_seconds
+            const wordsRead = Math.max(0, wordCount - errors);
+            const wpm = readingTimeSeconds > 0 ? Math.round(60 * wordsRead / readingTimeSeconds) : 0;
             
             // Store data
             readingData[idx] = {
