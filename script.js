@@ -266,16 +266,34 @@ function initDeviceSetup() {
 
 // Navigation functionality
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Initializing...');
+    
     // Initialize device setup - try multiple times if needed
-    initDeviceSetup();
+    try {
+        initDeviceSetup();
+    } catch (error) {
+        console.error('Error initializing device setup:', error);
+    }
     
     // Fallback initialization if elements weren't ready
     setTimeout(() => {
         const nextBtn = document.getElementById('device-next-btn');
-        if (nextBtn && !nextBtn.hasAttribute('data-initialized')) {
+        const deviceBtns = document.querySelectorAll('.device-btn');
+        
+        console.log('Fallback check:', {
+            nextBtn: !!nextBtn,
+            deviceBtns: deviceBtns.length,
+            initialized: nextBtn?.hasAttribute('data-initialized')
+        });
+        
+        if (nextBtn && deviceBtns.length > 0 && !nextBtn.hasAttribute('data-initialized')) {
             console.log('Re-initializing device setup...');
-            initDeviceSetup();
-            nextBtn.setAttribute('data-initialized', 'true');
+            try {
+                initDeviceSetup();
+                nextBtn.setAttribute('data-initialized', 'true');
+            } catch (error) {
+                console.error('Error re-initializing device setup:', error);
+            }
         }
     }, 500);
     
